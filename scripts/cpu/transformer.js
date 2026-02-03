@@ -21,12 +21,10 @@ const color_grid = [[red]];
  * @param {vec3} color 
  * @returns {string}
  */
-function to_hexcode(color){
-    let output = "";
-    for(const component of color){
-        output += component.toString(16);
-    }
-    return output;
+function to_hexcode(color) {
+    return color
+        .map(c => Math.round(c).toString(16).padStart(2, '0'))
+        .join('');
 }
 
 /**
@@ -37,7 +35,7 @@ function to_hexcode(color){
 function normalize_grid_size(grid){
     let line_size = 0;
     for(const line of grid){
-        line_size = Math.max(line.length);
+        line_size = Math.max(line.length,line_size);
     }
     for(let line of grid){
         if(line.length == line_size) continue;
@@ -58,7 +56,7 @@ export function build_color_grid(color_grid){
     for(const row of color_grid){
         html+="<tr>";
         for(const color of row){
-            html+= '<td bgcolor="' + to_hexcode(color) +  '"width="1" height="1"></td>';
+            html+= '<td bgcolor="#' + to_hexcode(color) +  '"width="1" height="1"></td>';
         }
         html+="</tr>";
     }
