@@ -1,5 +1,7 @@
-function hsl2rgb(h, s, l) {
-    const f_final = (n) => {
+import type { vec3 } from "./transformer";
+
+function hsl2rgb(h:number, s:number, l:number):vec3 {
+    const f_final = (n:number) => {
         const k = (n + h * 12) % 12;
         const color = l - s * Math.min(l, 1 - l) * Math.max(-1, Math.min(k - 3, 9 - k, 1));
         return 255 * color;
@@ -7,7 +9,7 @@ function hsl2rgb(h, s, l) {
     return [f_final(0), f_final(8), f_final(4)];
 }
 
-export function generate_trash_data(width, height){
+export function generate_trash_data(width:number, height:number):vec3[][]{
     const out = []
     const center_x = width / 2;
     const center_y = height / 2;

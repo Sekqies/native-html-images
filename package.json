@@ -1,0 +1,17 @@
+{
+  "name": "native-html-images",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.8.1",
+    "typescript": "~5.9.3",
+    "vite": "^7.2.4"
+  }
+}
