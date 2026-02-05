@@ -1,4 +1,4 @@
-import type { vec3 } from "./transformer";
+import type { vec3 } from "./to_html";
 
 function hsl2rgb(h:number, s:number, l:number):vec3 {
     const f_final = (n:number) => {

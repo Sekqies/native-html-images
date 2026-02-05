@@ -1,3 +1,5 @@
+import type { ArrayType } from "./math/types";
+
 export type vec3 = [number,number,number];
 
 
@@ -58,6 +60,41 @@ export function build_color_text(color_grid:vec3[][], base_text:string){
         html += "\n";
     }
     html+= "</pre>"
+    return html;
+}
+
+function get_rect_edge(x1:number, y1:number,x2:number,y2:number,thickness:number) : string{
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const len = Math.sqrt(dx * dx + dy * dy);
+    const ang = Math.atan2(dy, dx) * (180 / Math.PI);
+    return `<rect x="0" y="${-thickness / 2}" width="${len}" height="${thickness}" transform="translate(${x1} ${y1}) rotate(${ang})"/>`;
+}
+
+export function build_3d_svg(vertices:ArrayType, use_rect:boolean, stride:number = 4):string{
+    const n = vertices.length;
+    let html = "";
+
+    const thickness = 0.005;
+
+
+    for(let i = 0; i < n ; i+=6){
+        const x1 = vertices[i];
+        const y1 = vertices[i+1];
+
+        const x2 = vertices[i+2];
+        const y2 = vertices[i+3];
+
+        const x3 = vertices[i+4];
+        const y3 = vertices[i+5];
+        if(use_rect){
+            html+= get_rect_edge(x1,y1,x2,y2,thickness);
+            html+= get_rect_edge(x2,y2,x3,y3,thickness);
+            html+= get_rect_edge(x3,y3,x1,y1,thickness);
+            continue;
+        }
+        html += `<polygon points = "${x1},${y1} ${x2},${y2} ${x3},${y3}"/>`;
+    }
     return html;
 }
 

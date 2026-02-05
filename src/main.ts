@@ -1,4 +1,4 @@
-import { build_color_table, build_color_text } from "./transformer";
+import { build_color_table, build_color_text } from "./to_html";
 import { generate_trash_data } from "./image";
 
 
