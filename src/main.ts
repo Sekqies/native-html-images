@@ -1,5 +1,5 @@
-import { build_color_table, build_color_text } from "./cpu/transformer";
-import { generate_trash_data } from "./cpu/image";
+import { build_color_table, build_color_text } from "./transformer";
+import { generate_trash_data } from "./image";
 
 
 export function main(){
