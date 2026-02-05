@@ -195,6 +195,30 @@ export function invert_mat4(A: mat4): mat4 | null {
     );
 }
 
+export function scalar_mult_vec3(u:vec3, n:number){
+    return vec3(u[0]*n,u[1]*n,u[2]*n);
+}
+
+export function scalar_mult(u:ArrayType, n:number){
+    let out:ArrayType = new ArrayType(u.length);
+    for(let i = 0; i < u.length; ++i){
+        out[i] = u[i] * n;
+    }
+    return out;
+}
+
+export function add_vec3(u:vec3, v:vec3): vec3{
+    return vec3(u[0]+v[0],u[1]+v[1],u[2]+v[2]);
+}
+
+export function add_mat(u:ArrayType, v:ArrayType):ArrayType{
+    const out:ArrayType = new ArrayType(u.length);
+    for(let i = 0; i < u.length; ++i){
+        out[i] = u[i] + v[i];
+    }
+    return out;
+}
+
 
 export function length(v: ArrayType): number {
     return Math.sqrt(dot(v,v));
