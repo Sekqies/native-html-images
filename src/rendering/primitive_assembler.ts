@@ -7,7 +7,7 @@ export class PrimitiveAssembler{
         this.out = new ArrayType(size);
     }
 
-    assemble_primitives(vertices:ArrayType, indices:ArrayType, stride:number = 4):ArrayType{
+    assemble_primitives(vertices:ArrayType, indices:Uint16Array, stride:number = 4):ArrayType{
         const required_space = indices.length * stride;
         if (this.out.length < required_space){
             console.warn("Resizing this.out - this generally shouldn't happen");
