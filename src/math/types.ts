@@ -109,3 +109,5 @@ export function mat4(
     m[12] = m30; m[13] = m31; m[14] = m32; m[15] = m33;
     return m as mat4;
 }
+
+export const EPSILON = 1e-6;

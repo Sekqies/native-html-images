@@ -1,8 +1,7 @@
 import { add_vec3, cross, normalize, scalar_mult_vec3 } from "./matrix_operators";
-import { mat4, vec3, vec4 } from "./types";
+import { mat4, vec3, vec4, EPSILON } from "./types";
 
 
-const EPSILON:number = 1e-7;
 
 export function identity_quat():vec4{
     return vec4(0,0,0,1);
