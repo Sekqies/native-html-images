@@ -1,27 +1,27 @@
 import { ArrayType } from "../math/types";
+import type { Mesh } from "./mesh";
 
-export class PrimitiveAssembler{
-    out:ArrayType;
-
-    constructor(size:number){
-        this.out = new ArrayType(size);
+/**
+ * 
+ * @param mesh Mutated
+ * @param stride 
+ */
+export function assemble_primitives(mesh:Mesh, stride:number = 4):void{
+    const vertices = mesh.projected_buffer;
+    const indices = mesh.indices;
+    const required_space = indices.length * stride;
+    if (mesh.raster_buffer.length < required_space){
+        console.warn("Resizing the raster buffer's out - this generally shouldn't happen");
+        mesh.raster_buffer = new ArrayType(required_space);
     }
-
-    assemble_primitives(vertices:ArrayType, indices:Uint16Array, stride:number = 4):ArrayType{
-        const required_space = indices.length * stride;
-        if (this.out.length < required_space){
-            console.warn("Resizing this.out - this generally shouldn't happen");
-            this.out = new ArrayType(required_space);
+    const out = mesh.raster_buffer
+    let out_index = 0;
+    for(let i = 0; i < indices.length; ++i){
+        const index = indices[i];
+        const start = index * stride;
+        
+        for(let k = 0; k < stride; ++k){
+            out[out_index++] = vertices[start + k];
         }
-        let out_index = 0;
-        for(let i = 0; i < indices.length; ++i){
-            const index = indices[i];
-            const start = index * stride;
-            
-            for(let k = 0; k < stride; ++k){
-                this.out[out_index++] = vertices[start + k];
-            }
-        }
-        return this.out.subarray(0, out_index);
     }
 }

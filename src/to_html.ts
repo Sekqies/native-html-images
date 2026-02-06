@@ -71,8 +71,8 @@ function get_rect_edge(x1:number, y1:number,x2:number,y2:number,thickness:number
     return `<rect x="0" y="${-thickness / 2}" width="${len}" height="${thickness}" transform="translate(${x1} ${y1}) rotate(${ang})"/>`;
 }
 
-export function build_3d_svg(vertices:ArrayType, use_rect:boolean, stride:number = 4):string{
-    const n = vertices.length;
+export function build_3d_svg(vertices:ArrayType, end:number, use_rect:boolean):string{
+    const n = end;
     let html = "";
 
     const thickness = 0.005;
@@ -87,6 +87,8 @@ export function build_3d_svg(vertices:ArrayType, use_rect:boolean, stride:number
 
         const x3 = vertices[i+4];
         const y3 = vertices[i+5];
+
+        
         if(use_rect){
             html+= get_rect_edge(x1,y1,x2,y2,thickness);
             html+= get_rect_edge(x2,y2,x3,y3,thickness);

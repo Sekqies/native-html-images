@@ -1,5 +1,7 @@
 export const ArrayType = Float32Array;
+export const IndexingType = Int16Array;
 export type ArrayType = InstanceType<typeof ArrayType>
+export type IndexingType = InstanceType<typeof IndexingType>
 
 export type vec2 = ArrayType;
 export type vec3 = ArrayType;
