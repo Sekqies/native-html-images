@@ -10,7 +10,7 @@ import type { StringBuffer } from "../utils/string_buffer";
 export function render(mesh: Mesh, model:mat4, view:mat4, projection:mat4, invert_y:boolean = true, stride:number = 4):void {
     const mvp = mul_mat4(mul_mat4(projection,view),model);
     transform_vertices(mesh,mvp);
-    assemble_primitives(mesh,stride);
+    assemble_primitives(mesh);
     rasterize(mesh, invert_y, stride);
 }
 
