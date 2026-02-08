@@ -1,4 +1,5 @@
 import type { ArrayType } from "./math/types";
+import { character_to_uint, SB_TOKENS, string_to_uint, type StringBuffer } from "./utils/string_buffer";
 
 export type vec3 = [number,number,number];
 
@@ -71,9 +72,60 @@ function get_rect_edge(x1:number, y1:number,x2:number,y2:number,thickness:number
     return `<rect x="0" y="${-thickness / 2}" width="${len}" height="${thickness}" transform="translate(${x1} ${y1}) rotate(${ang})"/>`;
 }
 
-export function build_3d_svg(vertices:ArrayType, end:number, use_rect:boolean):string{
+const RECT_TOKENS = {
+    HEAD: string_to_uint('<rect x="0" y="'),
+    WIDTH: string_to_uint('" width="'),
+    HEIGHT: string_to_uint('" height="'),
+    TRANSFORM: string_to_uint('" transform="translate('),
+    ROTATE: string_to_uint(') rotate('),
+    TAIL: string_to_uint(')"/>')
+};
+
+function get_rect_edge_buffer(x1:number, y1:number,x2:number,y2:number,thickness:number, buffer:StringBuffer){
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const len = Math.sqrt(dx * dx + dy * dy);
+    const ang = Math.atan2(dy, dx) * (180 / Math.PI);
+    const y_offset = -thickness / 2;
+    buffer.write_chunk(RECT_TOKENS.HEAD);
+    buffer.write_float(y_offset);
+    
+    buffer.write_chunk(RECT_TOKENS.WIDTH);
+    buffer.write_float(len);
+
+    buffer.write_chunk(RECT_TOKENS.HEIGHT);
+    buffer.write_float(thickness);
+
+    buffer.write_chunk(RECT_TOKENS.TRANSFORM);
+    buffer.write_float(x1);
+    buffer.push(32);
+    buffer.write_float(y1);
+
+    buffer.write_chunk(RECT_TOKENS.ROTATE);
+    buffer.write_float(ang);
+
+    buffer.write_chunk(RECT_TOKENS.TAIL);
+}
+
+const POLYGON_TOKENS = {
+    HEAD: string_to_uint('<polygon points = "'),
+    TAIL: string_to_uint('"/>')
+}
+
+function push_pair(x:number,y:number,buffer:StringBuffer){
+    buffer.write_float(x);
+    buffer.push(SB_TOKENS.COMMA);
+    buffer.write_float(y);
+    buffer.push(SB_TOKENS.SPACE);
+}
+
+
+const decoder = new TextDecoder('ascii');
+
+export function build_3d_svg(vertices:ArrayType, end:number, use_rect:boolean, buffer:StringBuffer):string{
     const n = end;
-    let html = "";
+    buffer.reset();
+
 
     const thickness = 0.005;
 
@@ -90,14 +142,18 @@ export function build_3d_svg(vertices:ArrayType, end:number, use_rect:boolean):s
 
         
         if(use_rect){
-            html+= get_rect_edge(x1,y1,x2,y2,thickness);
-            html+= get_rect_edge(x2,y2,x3,y3,thickness);
-            html+= get_rect_edge(x3,y3,x1,y1,thickness);
+            get_rect_edge_buffer(x1,y1,x2,y2,thickness,buffer);
+            get_rect_edge_buffer(x2,y2,x3,y3,thickness,buffer);
+            get_rect_edge_buffer(x3,y3,x1,y1,thickness,buffer);
             continue;
         }
-        html += `<polygon points = "${x1},${y1} ${x2},${y2} ${x3},${y3}"/>`;
+        buffer.write_chunk(POLYGON_TOKENS.HEAD);
+        push_pair(x1,y1,buffer);
+        push_pair(x2,y2,buffer);
+        push_pair(x3,y3,buffer);
+        buffer.write_chunk(POLYGON_TOKENS.TAIL);
     }
-    return html;
+    return decoder.decode(buffer.buffer.subarray(0,buffer.cursor));
 }
 
 

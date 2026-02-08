@@ -2,6 +2,7 @@ import { mat4, vec3 } from "./math/types";
 import { perspective, identity, look_at, rotate, translate } from "./math/transformations";
 import { create_sphere } from "./rendering/primitives";
 import { build_mesh } from "./rendering/render";
+import { StringBuffer } from "./utils/string_buffer";
 
 
 export function main_3d() {
@@ -15,18 +16,19 @@ export function main_3d() {
     const view:mat4 = look_at(vec3(0,2,6.5),vec3(0,0,0),y);
     const projection = perspective(60 * Math.PI / 180, 400/300, 0.1, 100);
     let time = 0;
+    const string_buffer = new StringBuffer(1024*1024);
     const loop = () => {
         time += 0.01;
 
         let frame_html = "";
         let sun_model = identity();
         sun_model = rotate(sun_model, time * 0.5, y);
-        frame_html += build_mesh(sun_mesh, sun_model,view,projection,do_wireframe,true);
+        frame_html += build_mesh(sun_mesh, sun_model,view,projection,string_buffer,do_wireframe,true);
         let planet_model = identity();
         planet_model = rotate(planet_model, time, vec3(0, 1, 0));
         planet_model = translate(planet_model, vec3(3.5, 0, 0));
         planet_model = rotate(planet_model, time * 3, vec3(1, 0, 1));
-        frame_html += build_mesh(planet_mesh, planet_model,view,projection,do_wireframe,true);
+        frame_html += build_mesh(planet_mesh, planet_model,view,projection,string_buffer,do_wireframe,true);
         target!.innerHTML = frame_html;
         requestAnimationFrame(loop);
     }
