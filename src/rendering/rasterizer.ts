@@ -35,12 +35,15 @@ export function rasterize(mesh:Mesh, invert_y:boolean = true, stride:number = 4)
 
         const x1 = n1[0];
         const y1 = n1[1] * sign; 
+        const z1 = n1[2];
         
         const x2 = n2[0];
         const y2 = n2[1] * sign;
+        const z2 = n2[2];
         
         const x3 = n3[0];
         const y3 = n3[1] * sign;
+        const z3 = n3[2];
 
         const area = (x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1);
 
@@ -54,12 +57,15 @@ export function rasterize(mesh:Mesh, invert_y:boolean = true, stride:number = 4)
 
         out[out_index++] = x1;
         out[out_index++] = y1;
-        
+        out[out_index++] = z1;
+
         out[out_index++] = x2;
         out[out_index++] = y2;
+        out[out_index++] = z2;
 
         out[out_index++] = x3;
         out[out_index++] = y3;
+        out[out_index++] = z3;
     }
     mesh.raster_end = out_index;
 }

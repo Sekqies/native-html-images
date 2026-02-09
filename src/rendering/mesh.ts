@@ -6,7 +6,6 @@ export class Mesh{
     indices: IndexingType
     projected_buffer: ArrayType
     raster_buffer: ArrayType
-    draw_order:IndexingType
     raster_end:number
     visible_triangles_count:number
 
@@ -18,7 +17,6 @@ export class Mesh{
             this.raster_buffer = new ArrayType(indices.length * 4);
         else
             this.raster_buffer = raster_buffer; 
-        this.draw_order = new IndexingType(indices.length);
         this.raster_end = indices.length * 4;
         this.visible_triangles_count = 0;
     }

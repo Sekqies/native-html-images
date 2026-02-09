@@ -15,6 +15,10 @@ export function render(mesh: Mesh, model:mat4, view:mat4, projection:mat4, inver
     rasterize(mesh, invert_y, stride);
 }
 
+function get_z_value(array:ArrayType, offset:number, z_offset:number = 2, stride:number = 3){
+    return (array[offset + z_offset] + array[offset + z_offset + stride] + array[offset + z_offset + stride*2]);
+}
+
 export function render_scene(scene:Scene, mvp:mat4[], invert_y:boolean = true){
     for(let i = 0; i < scene.meshes.length; ++i){
         const mesh = scene.meshes[i];
@@ -22,6 +26,16 @@ export function render_scene(scene:Scene, mvp:mat4[], invert_y:boolean = true){
         assemble_primitives(mesh);
         rasterize(mesh,invert_y);
     }
+    let index = 0;
+    let offset = 0;
+    for(const mesh of scene.meshes){
+        for(let i = 0; i < mesh.raster_end; i+=9){
+            scene.draw_order[index] = i + offset;
+            index++;
+        }
+        offset += mesh.raster_buffer.length;
+    }
+    scene.draw_order.subarray(0,index).sort((a,b)=>get_z_value(scene.scene_buffer,a) - get_z_value(scene.scene_buffer,b));
 }
 
 
