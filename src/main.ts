@@ -6,6 +6,7 @@ import { StringBuffer } from "./utils/string_buffer";
 import { Mesh } from "./rendering/mesh";
 import { Scene } from "./rendering/scene";
 import { mul_mat4 } from "./math/matrix_operators";
+import { build_scene } from "./to_html";
 
 
 export function main_3d() {
@@ -13,8 +14,8 @@ export function main_3d() {
     if (!target) return;
     const wireframe_el = document.getElementById('wireframe-mode') as HTMLInputElement;
     const do_wireframe:boolean = wireframe_el?.checked; 
-    const sun_mesh = create_sphere(1.5, 16, 16); 
-    const planet_mesh = create_sphere(0.5, 12, 12);
+    const sun_mesh = create_sphere(1.5, 10, 10); 
+    const planet_mesh = create_sphere(0.5, 10, 10);
 
     const scene:Scene = new Scene([sun_mesh.vertices,planet_mesh.vertices],[sun_mesh.indices,planet_mesh.indices]);
 
@@ -37,10 +38,11 @@ export function main_3d() {
         planet_model = translate(planet_model, vec3(3.5, 0, 0));
         planet_model = rotate(planet_model, time * 3, vec3(1, 0, 1));
 
-        const planet_mvp = mul_mat4(planet_model,vp);
-        const sun_mvp = mul_mat4(sun_model,vp);
+        const planet_mvp = mul_mat4(vp,planet_model);
+        const sun_mvp = mul_mat4(vp,sun_model);
 
         render_scene(scene,[sun_mvp,planet_mvp],true);
+        frame_html = build_scene(scene,do_wireframe,string_buffer);
 
         target!.innerHTML = frame_html;
         requestAnimationFrame(loop);

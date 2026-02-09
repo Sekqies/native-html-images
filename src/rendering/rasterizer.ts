@@ -22,8 +22,7 @@ export function rasterize(mesh:Mesh, invert_y:boolean = true, stride:number = 4)
     let n1 = vec3(0,0,0);
     let n2 = vec3(0,0,0);
     let n3 = vec3(0,0,0);
-
-    for(let i = 0; i < mesh.visible_triangles_count; ++i){
+    for(let i = 0; i < mesh.raster_buffer.length/(3*stride); ++i){
         const base = 3 * i * stride;
         c1[0] = vertices[base + 0]; c1[1] = vertices[base + 1]; c1[2] = vertices[base + 2]; c1[3] = vertices[base + 3];
         c2[0] = vertices[base + stride + 0]; c2[1] = vertices[base + stride + 1]; c2[2] = vertices[base + stride + 2]; c2[3] = vertices[base + stride + 3];
@@ -33,6 +32,9 @@ export function rasterize(mesh:Mesh, invert_y:boolean = true, stride:number = 4)
         const v2 = process_perspective_mutate(c2, n2);
         const v3 = process_perspective_mutate(c3, n3);
 
+        if(!v1 || !v2 || !v3){
+            continue;
+        }
         const x1 = n1[0];
         const y1 = n1[1] * sign; 
         const z1 = n1[2];
@@ -49,10 +51,6 @@ export function rasterize(mesh:Mesh, invert_y:boolean = true, stride:number = 4)
 
         if (area <= 0) {
             continue; 
-        }
-
-        if(!v1 || !v2 || !v3){
-            continue;
         }
 
         out[out_index++] = x1;

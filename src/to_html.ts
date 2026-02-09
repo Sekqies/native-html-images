@@ -1,4 +1,5 @@
 import type { ArrayType } from "./math/types";
+import type { Scene } from "./rendering/scene";
 import { character_to_uint, SB_TOKENS, string_to_uint, type StringBuffer } from "./utils/string_buffer";
 
 export type vec3 = [number,number,number];
@@ -130,7 +131,7 @@ export function build_3d_svg_legacy(vertices:ArrayType, end:number, use_rect:boo
     const thickness = 0.005;
 
 
-    for(let i = 0; i < n ; i+=6){
+    for(let i = 0; i < n ; i+=9){
         const x1 = vertices[i];
         const y1 = vertices[i+1];
 
@@ -168,7 +169,7 @@ const PATH_TOKENS = {
 export function build_3d_svg(vertices:ArrayType, end:number, wireframe_mode:boolean,buffer:StringBuffer):string{
     buffer.reset();
     buffer.write_chunk(PATH_TOKENS.HEAD);
-    for(let i = 0; i < end; i+=6){
+    for(let i = 0; i < end; i+=9){
         const x1 = vertices[i];
         const y1 = vertices[i+1];
 
@@ -190,6 +191,44 @@ export function build_3d_svg(vertices:ArrayType, end:number, wireframe_mode:bool
     }
     else{
         buffer.write_chunk(PATH_TOKENS.TAIL_SOLID);
+    }
+    return decoder.decode(buffer.buffer.subarray(0,buffer.cursor));
+}
+
+
+
+
+
+export function build_scene(scene:Scene, wireframe_mode: boolean, buffer:StringBuffer):string{
+    buffer.reset();
+    if(wireframe_mode)
+        buffer.write_chunk(PATH_TOKENS.HEAD);
+    const vertices = scene.scene_buffer;
+    for(let i = 0; i < scene.draw_end; i++){
+        const index = scene.draw_order[i];
+        const x1 = vertices[index];
+        const y1 = vertices[index+1];
+
+        const x2 = vertices[index+3];
+        const y2 = vertices[index+4];
+
+        const x3 = vertices[index+6];
+        const y3 = vertices[index+7];
+
+        if(!wireframe_mode)
+            buffer.write_chunk(PATH_TOKENS.HEAD);
+        buffer.write_chunk(PATH_TOKENS.M);
+        push_pair(x1,y1,buffer);
+        buffer.write_chunk(PATH_TOKENS.L);
+        push_pair(x2,y2,buffer);
+        buffer.write_chunk(PATH_TOKENS.L);
+        push_pair(x3,y3,buffer);
+        buffer.write_chunk(PATH_TOKENS.Z);
+        if(!wireframe_mode)
+            buffer.write_chunk(PATH_TOKENS.TAIL_SOLID);
+    }
+    if(wireframe_mode){
+        buffer.write_chunk(PATH_TOKENS.TAIL_WIREFRAME);
     }
     return decoder.decode(buffer.buffer.subarray(0,buffer.cursor));
 }

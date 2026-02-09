@@ -35,7 +35,8 @@ export function render_scene(scene:Scene, mvp:mat4[], invert_y:boolean = true){
         }
         offset += mesh.raster_buffer.length;
     }
-    scene.draw_order.subarray(0,index).sort((a,b)=>get_z_value(scene.scene_buffer,a) - get_z_value(scene.scene_buffer,b));
+    scene.draw_order.subarray(0,index).sort((a,b)=>get_z_value(scene.scene_buffer,b) - get_z_value(scene.scene_buffer,a));
+    scene.draw_end = index;
 }
 
 

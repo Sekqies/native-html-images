@@ -13,23 +13,11 @@ export function assemble_primitives(mesh:Mesh):void{
     let out_index = 0;
     for(let i = 0; i < indices.length; ++i){
         const index = indices[i];
-        const v1 = indices[index * 3] * 4;
-        const v2 = indices[index * 3 + 1] * 4;
-        const v3 = indices[index * 3 + 2] * 4;
+const p_base = index * 4;
         
-        out[out_index++] = projected[v1];
-        out[out_index++] = projected[v1 + 1];
-        out[out_index++] = projected[v1 + 2];
-        out[out_index++] = projected[v1 + 3];
-
-        out[out_index++] = projected[v2];
-        out[out_index++] = projected[v2 + 1];
-        out[out_index++] = projected[v2 + 2];
-        out[out_index++] = projected[v2 + 3];
-
-        out[out_index++] = projected[v3];
-        out[out_index++] = projected[v3 + 1];
-        out[out_index++] = projected[v3 + 2];
-        out[out_index++] = projected[v3 + 3];
+        out[out_index++] = projected[p_base];
+        out[out_index++] = projected[p_base + 1];
+        out[out_index++] = projected[p_base + 2];
+        out[out_index++] = projected[p_base + 3];
     }
 }

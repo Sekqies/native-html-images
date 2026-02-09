@@ -4,6 +4,7 @@ import { Mesh } from "./mesh";
 export class Scene{
     scene_buffer:ArrayType;
     draw_order: IndexingType;
+    draw_end:number
     meshes:Mesh[];
 
     constructor(vertices:ArrayType[], indices:IndexingType[]){
@@ -19,6 +20,7 @@ export class Scene{
         this.scene_buffer = new ArrayType(index_size * 4);
         this.draw_order = new IndexingType(vert_size/3);
         this.meshes = new Array(vertices.length);
+        this.draw_end = this.draw_order.length;
         let prev_length = 0;
         for(let i = 0; i < vertices.length; ++i){
             this.meshes[i] = new Mesh(vertices[i],indices[i],this.scene_buffer.subarray(prev_length,prev_length + indices[i].length*4));
