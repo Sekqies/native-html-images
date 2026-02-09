@@ -1,15 +1,13 @@
-    No new features for you! This time developing was dedicated almost entirely to refactoring our render pipeline so it's easier to use. 
+We got some new optimizations, one of which provides a visual effect. Also, news!
 
-    A graphics engine is pretty general-use, for once I have one up and running, I'm free to do essentially whatever I feel like. The problem is the quick graphics system I built yesterday is kind of bad. 
-    When I was writing my last devlog, I wanted to make a quick demo scene to show the rendering engine up and running. In doing so, I realized that the way I had structured my data pipeline was kind of all over the place, and required me to keep track of a bunch different buffers, that I was cloning and moving every draw frame. I took a quick look at my performance graph, and found that 6% of usage was in the `rasterize` function, which allocated memory every time a new frame was called.
+First of all, getting the purely optimizations things out of the way: we're stepping out of manually manipulating strings. I noticed that in my old benchmark, 8.2% of the time was being used in `build_3d_svg`. At first i found this to be weird, since this function is purely string manipulation, but, as it turns out, this is exactly the issue. String reallocation is expensive, and since they aren't mutable in Javascript, I can't just edit a pre-existing string.
+The solution to this is representing the strings as what they should be, character arrays. This involved the creation of a new helper class, StringBuffer, that represents strings as an uInt8 typed array, and the necessary helper functions to convert strings and numbers into this byte array method.
 
-    We can't be having that. So, I decided to refactor my system to use a `Mesh` structure that holds three distinct buffers: our vertices, those vertices after being transformed, and them after being rasterized. This way, I allocate memory once, and modify these buffers at runtime, whenever needed.
-    This required to rewrite _every_ step of my rendering pipeline, including most of our matrix math, to mutate instead of copy and return. This is particularly annoying, because javascript passes object by reference (good!) but you can't reassign them (bad), and it doesn't throw a warning if you try to.
+Another thing: I thought I wouldn't be able to use the `stroke` and `fill` attributes of svg because i thought this project could also be submitted to the #flavorless challenge. As it turns out, it isn't. So I get this freedom which, in turn, means I'll get to actually _color_ my 3D meshes. 
+If you've done 3D rendering in OpenGL before, you'll likely be familiar with the GL_DEPTH_TESTING that you enable so two meshes in different z positions don't merge together. This is a nice bonus that comes pre-made, but, as with everything in our project, we had to implement ourselves through a technique called Painter's Algorithm. Usually, this is done through a technique called z-buffering, but this doesn't work for our svg based project, because it requires you to have pixels (while the only thing we have here are vertices). 
 
-    Anyways, everything is now done! This leaves us free to try to further optimize the `<svg>`, or pivot into actually doing anything with our engine.
-    Attached, the new performance results!
+And, one last optimization: backface culling. We simply don't draw vertices facing away from the camera.
 
-    Obs: I thought this would be a quick refactor, and didn't plan ahead. No issues nor modularization of commits in this one :\(
-
-    **Commits**
-    [Commit 5d1a342](https://github.com/Sekqies/native-html-images/commit/5d1a34267f30762c0e1550e14240dc450b4d9bc5): Refactor to use mesh system
+**Commits**
+[Commit f10e698](https://url.jam06452.uk/u0uj8u): Optimized string writing to use fixed-size buffer
+[Commit 07573cd](https://url.jam06452.uk/103qgwe): Depth sorting & Backface culling

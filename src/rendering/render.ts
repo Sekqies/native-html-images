@@ -2,10 +2,11 @@ import { rasterize } from "./rasterizer";
 import { build_3d_svg } from "../to_html";
 import type { Mesh } from "./mesh";
 import { mul_mat4 } from "../math/matrix_operators";
-import type { mat4 } from "../math/types";
+import { ArrayType, type mat4 } from "../math/types";
 import { transform_vertices } from "./vertex";
 import { assemble_primitives } from "./primitive_assembler";
 import type { StringBuffer } from "../utils/string_buffer";
+import type { Scene } from "./scene";
 
 export function render(mesh: Mesh, model:mat4, view:mat4, projection:mat4, invert_y:boolean = true, stride:number = 4):void {
     const mvp = mul_mat4(mul_mat4(projection,view),model);
@@ -13,6 +14,16 @@ export function render(mesh: Mesh, model:mat4, view:mat4, projection:mat4, inver
     assemble_primitives(mesh);
     rasterize(mesh, invert_y, stride);
 }
+
+export function render_scene(scene:Scene, mvp:mat4[], invert_y:boolean = true){
+    for(let i = 0; i < scene.meshes.length; ++i){
+        const mesh = scene.meshes[i];
+        transform_vertices(mesh,mvp[i]);
+        assemble_primitives(mesh);
+        rasterize(mesh,invert_y);
+    }
+}
+
 
 /**
  * 

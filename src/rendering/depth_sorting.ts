@@ -20,8 +20,5 @@ export function depth_sort(mesh: Mesh, stride: number = 4): number {
         visible_count++;
     }
 
-    const active_order = mesh.draw_order.subarray(0, visible_count);
-    active_order.sort((a, b) => raster[b] - raster[a]);
-
     return visible_count;
 }

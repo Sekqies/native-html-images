@@ -122,7 +122,7 @@ function push_pair(x:number,y:number,buffer:StringBuffer){
 
 const decoder = new TextDecoder('ascii');
 
-export function build_3d_svg(vertices:ArrayType, end:number, use_rect:boolean, buffer:StringBuffer):string{
+export function build_3d_svg_legacy(vertices:ArrayType, end:number, use_rect:boolean, buffer:StringBuffer):string{
     const n = end;
     buffer.reset();
 
@@ -156,4 +156,40 @@ export function build_3d_svg(vertices:ArrayType, end:number, use_rect:boolean, b
     return decoder.decode(buffer.buffer.subarray(0,buffer.cursor));
 }
 
+const PATH_TOKENS = {
+    HEAD: string_to_uint('<path d="'),
+    M: string_to_uint('M '),
+    L: string_to_uint('L '),
+    Z: string_to_uint('Z '),
+    TAIL_WIREFRAME: string_to_uint('" fill="none" stroke = "black" stroke-width = "0.005"/>'),
+    TAIL_SOLID: string_to_uint('" stroke="red"/>')
+};
 
+export function build_3d_svg(vertices:ArrayType, end:number, wireframe_mode:boolean,buffer:StringBuffer):string{
+    buffer.reset();
+    buffer.write_chunk(PATH_TOKENS.HEAD);
+    for(let i = 0; i < end; i+=6){
+        const x1 = vertices[i];
+        const y1 = vertices[i+1];
+
+        const x2 = vertices[i+2];
+        const y2 = vertices[i+3];
+
+        const x3 = vertices[i+4];
+        const y3 = vertices[i+5];
+        buffer.write_chunk(PATH_TOKENS.M);
+        push_pair(x1,y1,buffer);
+        buffer.write_chunk(PATH_TOKENS.L);
+        push_pair(x2,y2,buffer);
+        buffer.write_chunk(PATH_TOKENS.L);
+        push_pair(x3,y3,buffer);
+        buffer.write_chunk(PATH_TOKENS.Z);
+    }
+    if(wireframe_mode){
+        buffer.write_chunk(PATH_TOKENS.TAIL_WIREFRAME);
+    }
+    else{
+        buffer.write_chunk(PATH_TOKENS.TAIL_SOLID);
+    }
+    return decoder.decode(buffer.buffer.subarray(0,buffer.cursor));
+}

@@ -9,8 +9,6 @@ import { process_perspective_mutate} from "./vertex";
  * @param stride 
  */
 export function rasterize(mesh:Mesh, invert_y:boolean = true, stride:number = 4):void {
-    const num_verts = mesh.raster_buffer.length/stride;
-    const num_triangles = num_verts/3;
     const vertices = mesh.raster_buffer;
     const out = mesh.raster_buffer;
     let out_index = 0;

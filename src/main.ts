@@ -1,7 +1,7 @@
 import { mat4, vec3 } from "./math/types";
 import { perspective, identity, look_at, rotate, translate } from "./math/transformations";
 import { create_sphere } from "./rendering/primitives";
-import { build_mesh } from "./rendering/render";
+import { build_mesh, build_meshes } from "./rendering/render";
 import { StringBuffer } from "./utils/string_buffer";
 
 
@@ -28,7 +28,7 @@ export function main_3d() {
         planet_model = rotate(planet_model, time, vec3(0, 1, 0));
         planet_model = translate(planet_model, vec3(3.5, 0, 0));
         planet_model = rotate(planet_model, time * 3, vec3(1, 0, 1));
-        frame_html += build_mesh(planet_mesh, planet_model,view,projection,string_buffer,do_wireframe,true);
+        frame_html += build_meshes([sun_mesh,planet_mesh],[sun_model,planet_model],[view,view],[projection,projection],string_buffer,do_wireframe,true);
         target!.innerHTML = frame_html;
         requestAnimationFrame(loop);
     }

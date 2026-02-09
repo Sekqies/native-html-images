@@ -10,11 +10,14 @@ export class Mesh{
     raster_end:number
     visible_triangles_count:number
 
-    constructor(vertices:ArrayType, indices:IndexingType){
+    constructor(vertices:ArrayType, indices:IndexingType, raster_buffer:ArrayType | null = null){
         this.vertices = vertices;
         this.indices = indices;
         this.projected_buffer = new ArrayType(vertices.length * 4 / 3);
-        this.raster_buffer = new ArrayType(indices.length * 4);
+        if(raster_buffer === null)
+            this.raster_buffer = new ArrayType(indices.length * 4);
+        else
+            this.raster_buffer = raster_buffer; 
         this.draw_order = new IndexingType(indices.length);
         this.raster_end = indices.length * 4;
         this.visible_triangles_count = 0;
