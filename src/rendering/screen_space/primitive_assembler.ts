@@ -1,4 +1,4 @@
-import type { Mesh } from "./mesh";
+import type { Mesh } from "../types/mesh";
 
 /**
  * 

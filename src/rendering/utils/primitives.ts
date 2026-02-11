@@ -1,5 +1,5 @@
-import { ArrayType, IndexingType } from "../math/types";
-import { Mesh } from "./mesh";
+import { ArrayType, IndexingType } from "../../math/types";
+import { Geometry } from "../types/geometry";
 
 export function create_sphere(radius: number, rings: number, slices: number):{vertices:ArrayType, indices: IndexingType} {
     const vertice_count = (rings + 1) * (slices + 1) * 3;
@@ -40,5 +40,5 @@ export function create_sphere(radius: number, rings: number, slices: number):{ve
             indices[ind_i++] = first + 1
         }
     }
-    return {vertices:vertices, indices: indices};
+    return new Geometry(vertices,indices);
 }

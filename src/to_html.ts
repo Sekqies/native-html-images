@@ -163,7 +163,7 @@ const PATH_TOKENS = {
     L: string_to_uint('L '),
     Z: string_to_uint('Z '),
     TAIL_WIREFRAME: string_to_uint('" fill="none" stroke = "black" stroke-width = "0.005"/>'),
-    TAIL_SOLID: string_to_uint('" stroke="red"/>')
+    TAIL_SOLID: string_to_uint('" stroke="red" stroke-width = "0.005"/>')
 };
 
 export function build_3d_svg(vertices:ArrayType, end:number, wireframe_mode:boolean,buffer:StringBuffer):string{

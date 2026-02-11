@@ -1,6 +1,6 @@
-import { mul_mat4_vec4, scalar_mult_vec3 } from "../math/matrix_operators";
-import { mat4, vec4, vec3, EPSILON, vec2 } from "../math/types";
-import type { Mesh } from "./mesh";
+import { mul_mat4_vec4, scalar_mult_vec3 } from "../../math/matrix_operators";
+import { mat4, vec4, vec3, EPSILON, vec2 } from "../../math/types";
+import type { Mesh } from "../types/mesh";
 
 export function transform_vertex(mvp:mat4, vertex:vec3):vec4{
     return mul_mat4_vec4(mvp,vertex);

@@ -1,13 +1,21 @@
-We got some new optimizations, one of which provides a visual effect. Also, news!
+We are now doing things with `path` and `fill` (and properly depth sorting)
 
-First of all, getting the purely optimizations things out of the way: we're stepping out of manually manipulating strings. I noticed that in my old benchmark, 8.2% of the time was being used in `build_3d_svg`. At first i found this to be weird, since this function is purely string manipulation, but, as it turns out, this is exactly the issue. String reallocation is expensive, and since they aren't mutable in Javascript, I can't just edit a pre-existing string.
-The solution to this is representing the strings as what they should be, character arrays. This involved the creation of a new helper class, StringBuffer, that represents strings as an uInt8 typed array, and the necessary helper functions to convert strings and numbers into this byte array method.
+Since we couldn't draw anything that wasn't either a black silhuette or a wireframe outline, the order in which things are drawn never really mattered. Now, it does.
+In the previous devlog, I "fixed" this by sorting triangles in such a way that what is _further_ from the screen is drawn first, and what is closer, last. This way, if everything is behind this object, it will be covered by it. It was to my horror, however, that when I went to try rendering the two rotating spheres, that this _did not work, at all._
 
-Another thing: I thought I wouldn't be able to use the `stroke` and `fill` attributes of svg because i thought this project could also be submitted to the #flavorless challenge. As it turns out, it isn't. So I get this freedom which, in turn, means I'll get to actually _color_ my 3D meshes. 
-If you've done 3D rendering in OpenGL before, you'll likely be familiar with the GL_DEPTH_TESTING that you enable so two meshes in different z positions don't merge together. This is a nice bonus that comes pre-made, but, as with everything in our project, we had to implement ourselves through a technique called Painter's Algorithm. Usually, this is done through a technique called z-buffering, but this doesn't work for our svg based project, because it requires you to have pixels (while the only thing we have here are vertices). 
+This was due to me sorting the triangles in each mesh individually rather than as global "scene" context. In simple terms:
+- What we were doing: `[3,1],[5,0] => [1,3],[0,5] => [1,3,0,5]` 
+- What we were _supposed_ to do: `[3,1],[5,0] => [3,1,5,0] => [0,1,3,5]`
 
-And, one last optimization: backface culling. We simply don't draw vertices facing away from the camera.
+At a high level, this is an obvious enough fix: just merge all meshes into one huge array, and sort it. But it comes with a huge problem (for a memory nut, like me): we'll be _doubling_ the memory we allocate. 
+Thankfully, Javascript kindly provides us with the `subarray` method, that gives us a "view", or a reference, to a memory chunk of a larger array. Consequentially, we can create a large buffer with all the data we'll need, and give each mesh a chunk of it. 
+In our program, we call that large buffer a `Scene`.
+
+After doing all of this, I went to render the two overlapping spheres and... it didn't work? I quickly learned that this was due to the way that `<path>` works in SVG: if we want depth, we need different DOM objects, rather than a single, large one. It is bad for performance, but ultimately necessary.
+
+With all this, we got our vertex engine done! Attached, lots of triangles!
 
 **Commits**
-[Commit f10e698](https://url.jam06452.uk/u0uj8u): Optimized string writing to use fixed-size buffer
-[Commit 07573cd](https://url.jam06452.uk/103qgwe): Depth sorting & Backface culling
+[Commit eaaa1ea](https://url.jam06452.uk/1r26kdk): Created Scene object
+[Commit 06e157a](https://url.jam06452.uk/vnhdm7): Finished Scene logic
+[Commit df1a013](https://url.jam06452.uk/bygzl): Depth working!

@@ -1,10 +1,10 @@
 import { mat4, vec3 } from "./math/types";
 import { perspective, identity, look_at, rotate, translate } from "./math/transformations";
-import { create_sphere } from "./rendering/primitives";
+import { create_sphere } from "./rendering/utils/primitives";
 import { build_mesh, render_scene } from "./rendering/render";
 import { StringBuffer } from "./utils/string_buffer";
-import { Mesh } from "./rendering/mesh";
-import { Scene } from "./rendering/scene";
+import { Mesh } from "./rendering/types/mesh";
+import { Scene } from "./rendering/types/scene";
 import { mul_mat4 } from "./math/matrix_operators";
 import { build_scene } from "./to_html";
 
@@ -14,18 +14,19 @@ export function main_3d() {
     if (!target) return;
     const wireframe_el = document.getElementById('wireframe-mode') as HTMLInputElement;
     const do_wireframe:boolean = wireframe_el?.checked; 
-    const sun_mesh = create_sphere(1.5, 10, 10); 
-    const planet_mesh = create_sphere(0.5, 10, 10);
+    const sun_mesh = create_sphere(1.5, 32, 32); 
+    const planet_mesh = create_sphere(0.5, 16, 16);
 
     const scene:Scene = new Scene([sun_mesh.vertices,planet_mesh.vertices],[sun_mesh.indices,planet_mesh.indices]);
 
+    console.log(scene.draw_end)
 
 
     const y = vec3(0,1,0);
     const view:mat4 = look_at(vec3(0,2,6.5),vec3(0,0,0),y);
     const projection = perspective(60 * Math.PI / 180, 400/300, 0.1, 100);
     let time = 0;
-    const string_buffer = new StringBuffer(1024*1024);
+    const string_buffer = new StringBuffer(scene.scene_buffer.length * 50);
     const vp = mul_mat4(projection,view);
     const loop = () => {
         time += 0.01;

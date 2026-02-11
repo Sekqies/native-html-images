@@ -1,6 +1,6 @@
-import { vec3, vec4 } from "../math/types";
-import type { Mesh } from "./mesh";
-import { process_perspective_mutate} from "./vertex";
+import { vec3, vec4 } from "../../math/types";
+import type { Mesh } from "../types/mesh";
+import { process_perspective_mutate} from "../clip_space/vertex";
 
 /**
  * 

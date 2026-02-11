@@ -100,6 +100,17 @@ export function mul_mat4_vec4(A: mat4, u: vec4): vec4 {
     );
 }
 
+export function mul_mat4_vec4_mut(A:mat4, u:vec4):void{
+    const a = A[0] * u[0] + A[4] * u[1] + A[8] * u[2] + A[12] * u[3];
+    const b = A[1] * u[0] + A[5] * u[1] + A[9] * u[2] + A[13] * u[3];
+    const c =  A[2] * u[0] + A[6] * u[1] + A[10] * u[2] + A[14] * u[3];
+    const d = A[3] * u[0] + A[7] * u[1] + A[11] * u[2] + A[15] * u[3];
+    u[0] = a;
+    u[1] = b;
+    u[2] = c;
+    u[3] = d;
+}
+
 export function invert_mat2(A: mat2): mat2 | null {
     const a0 = A[0], a1 = A[1], a2 = A[2], a3 = A[3];
     let det = a0 * a3 - a2 * a1;
@@ -210,6 +221,7 @@ export function scalar_mult(u:ArrayType, n:number){
 export function add_vec3(u:vec3, v:vec3): vec3{
     return vec3(u[0]+v[0],u[1]+v[1],u[2]+v[2]);
 }
+
 
 export function add_mat(u:ArrayType, v:ArrayType):ArrayType{
     const out:ArrayType = new ArrayType(u.length);
