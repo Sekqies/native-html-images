@@ -17,7 +17,7 @@ export function main_3d() {
     const sun_mesh = create_sphere(1.5, 32, 32); 
     const planet_mesh = create_sphere(0.5, 16, 16);
 
-    const scene:Scene = new Scene([sun_mesh.vertices,planet_mesh.vertices],[sun_mesh.indices,planet_mesh.indices]);
+    const scene:Scene = new Scene([sun_mesh,planet_mesh]);
 
     console.log(scene.draw_end)
 

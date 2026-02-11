@@ -43,9 +43,10 @@ export class Scene{
      * @param max_triangles The maximum number of triangles this Scene object can store. 
      */
     reserve(max_triangles:number){
-        this.scene_buffer = new ArrayType(max_triangles * 9);
+        this.scene_buffer = new ArrayType(max_triangles * 12);
         this.projected_buffer = new ArrayType(max_triangles * 12);
         this.draw_order = new IndexingType(max_triangles);
+        this.color_buffer = new ArrayType(max_triangles*3);
         this.draw_end = 0;
         this.meshes = [];
         this.lights = [];

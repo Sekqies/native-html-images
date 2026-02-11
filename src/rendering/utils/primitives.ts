@@ -1,7 +1,7 @@
 import { ArrayType, IndexingType } from "../../math/types";
 import { Geometry } from "../types/geometry";
 
-export function create_sphere(radius: number, rings: number, slices: number):{vertices:ArrayType, indices: IndexingType} {
+export function create_sphere(radius: number, rings: number, slices: number):Geometry {
     const vertice_count = (rings + 1) * (slices + 1) * 3;
     const vertices = new ArrayType(vertice_count);
     const indices = new IndexingType(rings * slices * 6);

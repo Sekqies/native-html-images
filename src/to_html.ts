@@ -1,5 +1,5 @@
 import type { ArrayType } from "./math/types";
-import type { Scene } from "./rendering/scene";
+import type { Scene } from "./rendering/types/scene";
 import { character_to_uint, SB_TOKENS, string_to_uint, type StringBuffer } from "./utils/string_buffer";
 
 export type vec3 = [number,number,number];

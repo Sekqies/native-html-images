@@ -222,6 +222,10 @@ export function add_vec3(u:vec3, v:vec3): vec3{
     return vec3(u[0]+v[0],u[1]+v[1],u[2]+v[2]);
 }
 
+export function sub_vec3(u:vec3,v:vec3):vec3{
+    return vec3(u[0]-v[0],u[1]-v[1],u[2]-v[2]);
+}
+
 
 export function add_mat(u:ArrayType, v:ArrayType):ArrayType{
     const out:ArrayType = new ArrayType(u.length);

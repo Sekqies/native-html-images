@@ -1,4 +1,4 @@
-import { length_vec3, mul_mat4_vec4, mul_mat4_vec4_mut } from "../math/matrix_operators";
+import { length_vec3, mul_mat4_vec4, mul_mat4_vec4_mut, sub_vec3 } from "../math/matrix_operators";
 import { ArrayType, mat4, vec3, vec4 } from "../math/types";
 import type { Light } from "./types/light";
 import type { Mesh } from "./types/mesh";
@@ -9,18 +9,17 @@ export function process_lighting(mesh:Mesh, scene:Scene){
     const world_coordinates = mesh.projected_buffer;
     const lights = scene.lights;
     let vertex:vec3 = vec3(0,0,0);
+    const k = 0.01;
     for(let i = 0; i < world_coordinates.length; i+=4){
         vertex[0] = world_coordinates[i];
         vertex[1] = world_coordinates[i+1];
         vertex[2] = world_coordinates[i+2];
         let color = vec3(0,0,0);
-        let intensity = 0;
         for(const light of lights){
-            vertex[0] -= light.position[0];
-            vertex[1] -= light.position[1];
-            vertex[2] -= light.position[2];
-            const dist = length_vec3(vertex);
-
+            const L = sub_vec3(vertex,light.position);
+            const dist = length_vec3(L);
+            if (dist > light.radius) continue;
+            
         }
     }
 }
