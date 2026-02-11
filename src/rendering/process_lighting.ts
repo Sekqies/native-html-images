@@ -21,7 +21,7 @@ export function process_lighting(mesh:Mesh, scene:Scene){
         const nz = mesh.normals[start+2];
 
 
-        let color = vec3(mesh.albedo[0],mesh.albedo[1],mesh.albedo[2]);
+        let color = vec3(0,0,0);
         for(const light of lights){
             const L = sub_vec3(light.position,vertex);
             const dist = length_vec3(L) || k;
@@ -33,13 +33,16 @@ export function process_lighting(mesh:Mesh, scene:Scene){
             }
             const dot = L[0] * nx + L[1] * ny + L[2] * nz;
             const diffuse = Math.max(0,dot);
-            const window = 1//*Math.pow(Math.max(0, 1 - Math.pow(dist / light.radius, 4)), 2)
+            const window = 1*Math.pow(Math.max(0, 1 - Math.pow(dist / light.radius, 4)), 2)
             const attenuation = light.intensity/(1.0 + k*(dist*dist)) * window;
             const strength = diffuse * attenuation;
             color[0] += light.color[0] * strength;
             color[1] += light.color[1] * strength;
             color[2] += light.color[2] * strength;
         }
+        color[0] *= mesh.albedo[0];
+        color[1] *= mesh.albedo[1];
+        color[2] *= mesh.albedo[2];
         mesh.color_buffer[index++] = Math.min(1.0, color[0]);
         mesh.color_buffer[index++] = Math.min(1.0, color[1]);
         mesh.color_buffer[index++] = Math.min(1.0, color[2]);

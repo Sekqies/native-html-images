@@ -15,69 +15,66 @@ export function main_3d() {
     const target = document.getElementById('container');
     if (!target) return;
     const wireframe_el = document.getElementById('wireframe-mode') as HTMLInputElement;
-    const do_wireframe:boolean = wireframe_el?.checked; 
-    const sun_mesh = create_sphere(1.5, 32, 32); 
-    const planet_mesh = create_sphere(0.5, 16, 16);
 
-    const scene:Scene = new Scene([sun_mesh,planet_mesh],[vec3(1,0,0),vec3(0,0,1)]);
+    const sun_geo = create_sphere(1.5, 32, 32); 
+    const planet_geo = create_sphere(0.5, 16, 16);
+    const bulb_geo = create_sphere(0.15, 8, 8); 
 
+    const scene: Scene = new Scene(
+        [sun_geo, planet_geo, bulb_geo], 
+        [vec3(1, 0, 0), vec3(0, 0, 1), vec3(1, 1, 0.8)] 
+    );
 
-    console.log(scene.draw_end)
-
-
-    const y = vec3(0,1,0);
-    const view:mat4 = look_at(vec3(0,2,6.5),vec3(0,0,0),y);
-    const projection = perspective(60 * Math.PI / 180, 400/300, 0.1, 100);
+    const y = vec3(0, 1, 0);
+    const view: mat4 = look_at(vec3(0, 2, 6.5), vec3(0, 0, 0), y);
+    const projection = perspective(60 * Math.PI / 180, 400 / 300, 0.1, 100);
+    const vp = mul_mat4(projection, view);
     let time = 0;
     const string_buffer = new StringBuffer(scene.scene_buffer.length * 50);
-    const vp = mul_mat4(projection,view);
 
-    const sun_light = new Light(
-        vec3(10,10,10),
-        vec3(1.0,0.95,0.9),
-        6.0,
-        200.0
+    const sun_light = new Light(vec3(10, 10, 10), vec3(1.0, 0.95, 0.9), 3.0, 200.0);
+    
+    const point_light = new Light(
+        vec3(0, 0, 0),      
+        vec3(1.0, 1.0, 0.5), 
+        5.0,                
+        15.0               
     );
-    const second_sun = new Light(
-        vec3(10,-10,-10),
-        vec3(0.2,0.95,0.2),
-        6.0,
-        200.0
-    );
-    const third_sun = new Light(
-        vec3(10,10,10),
-        vec3(0.3,0.6,0.9),
-        6.0,
-        200.0
-    );
-
 
     scene.add_light(sun_light);
-    scene.add_light(second_sun);
-    scene.add_light(third_sun);
+    scene.add_light(point_light);
+    const do_wireframe: boolean = wireframe_el?.checked;
 
     const loop = () => {
         time += 0.01;
 
-        let frame_html = "";
-        let sun_model = identity();
-        sun_model = rotate(sun_model, time * 0.5, y);
-        let planet_model = identity();
+        const lx = Math.cos(time * 2) * 2.5;
+        const ly = Math.sin(time * 2) * 2.5;
+        const lz = Math.sin(time) * 1.5; 
+        
+        point_light.position[0] = lx;
+        point_light.position[1] = ly;
+        point_light.position[2] = lz;
 
-        planet_model = rotate(planet_model, time, vec3(0, 1, 0));
+        let sun_model = rotate(identity(), time * 0.5, y);
+        
+        let planet_model = rotate(identity(), time, y);
         planet_model = translate(planet_model, vec3(3.5, 0, 0));
         planet_model = rotate(planet_model, time * 3, vec3(1, 0, 1));
 
-        const planet_mvp = mul_mat4(vp,planet_model);
-        const sun_mvp = mul_mat4(vp,sun_model);
-        const ar = [sun_model,planet_model]
-        for(let i = 0; i < 2; ++i){
-            scene.meshes[i].update_normals(ar[i]);
-        }
-        process_world_coordinates(scene,ar);
-        render_scene(scene,[sun_mvp,planet_mvp],true);
-        frame_html = build_scene(scene,do_wireframe,string_buffer);
+        let bulb_model = translate(identity(), vec3(lx, ly, lz));
 
+        const models = [sun_model, planet_model, bulb_model];
+        const mvps = models.map(m => mul_mat4(vp, m));
+
+        for (let i = 0; i < scene.meshes.length; ++i) {
+            scene.meshes[i].update_normals(models[i]);
+        }
+        
+        process_world_coordinates(scene, models);
+        render_scene(scene, mvps, true);
+        
+        const frame_html = build_scene(scene, do_wireframe, string_buffer);
         target!.innerHTML = frame_html;
         requestAnimationFrame(loop);
     }

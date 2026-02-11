@@ -31,9 +31,9 @@ export class Geometry{
             const vy = verts[i3+1] - verts[i1+1];
             const vz = verts[i3+2] - verts[i1+2];
 
-            const nx = uy * vz - uz * vy;
-            const ny = uz * vx - ux * vz;
-            const nz = ux * vy - uy * vx;
+            const nx = vy * uz - vz * uy;
+            const ny = vz * ux - vx * uz;
+            const nz = vx * uy - vy * ux;
 
             norms[i1] += nx; norms[i1+1] += ny; norms[i1+2] += nz;
             norms[i2] += nx; norms[i2+1] += ny; norms[i2+2] += nz;
