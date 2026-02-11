@@ -3,6 +3,9 @@ import type { Geometry } from "./geometry";
 import type { Light } from "./light";
 import { Mesh } from "./mesh";
 
+
+const HUGE = 1024*1024 * 10;
+
 export class Scene{
     projected_buffer!:ArrayType;
     scene_buffer!:ArrayType;
@@ -72,13 +75,17 @@ export class Scene{
     add_mesh(geometry:Geometry, color:vec3 = vec3(0.2,0.2,0.2)):Mesh{
         const scene_size = geometry.indices.length * 4;
         const proj_size = geometry.vertices.length/3*4;
-        const color_size = geometry.vertices.length * 3;
-        const raster_color_size = geometry.indices.length * 3;
+        const color_size = geometry.vertices.length;
+        const raster_color_size = geometry.indices.length*3;
 
         const scene_view = this.scene_buffer.subarray(this.scene_cursor, this.scene_cursor + scene_size);
         const proj_view = this.projected_buffer.subarray(this.projected_cursor,this.projected_cursor + proj_size);
         const color_view = this.color_buffer.subarray(this.color_cursor,this.color_cursor + color_size);
         const raster_color = this.raster_color.subarray(this.raster_color_cursor,this.raster_color_cursor + raster_color_size);
+
+        console.log(`Cursors: ${[this.scene_cursor,this.projected_cursor,this.color_cursor,this.raster_color_cursor]}`);
+        console.log(`Scene_size for mesh: ${scene_size}, proj = ${proj_size}, color_size = ${color_size}, raster_color_size = ${raster_color_size}`)
+        console.log(`Full sizes: ${[this.scene_buffer.length,this.projected_buffer.length,this.color_buffer.length,this.raster_color.length]}`)
 
         this.scene_cursor += scene_size;
         this.projected_cursor += proj_size;

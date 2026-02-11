@@ -28,12 +28,22 @@ export function render_scene(scene:Scene, mvp:mat4[], invert_y:boolean = true){
     }
     let index = 0;
     let offset = 0;
+    let color_offset = 0;
     for(const mesh of scene.meshes){
-        for(let i = 0; i < mesh.raster_end; i+=9){
-            scene.draw_order[index] = i + offset;
+        const raster_size = mesh.raster_end; 
+        const raster_color = raster_size / 3;
+        const pos_view = mesh.raster_buffer.subarray(0, raster_size);
+        const col_view = mesh.raster_color.subarray(0, raster_color);
+
+        scene.scene_buffer.set(pos_view, offset);
+        scene.raster_color.set(col_view, color_offset);
+
+        for(let i = 0; i < raster_size; i+=9){
+            scene.draw_order[index] = offset + i;
             index++;
         }
-        offset += mesh.raster_buffer.length;
+        offset += raster_size;
+        color_offset += raster_color;
     }
     scene.draw_order.subarray(0,index).sort((a,b)=>get_z_value(scene.scene_buffer,b) - get_z_value(scene.scene_buffer,a));
     scene.draw_end = index;

@@ -21,7 +21,9 @@ export function main_3d() {
 
     const scene:Scene = new Scene([sun_mesh,planet_mesh],[vec3(1,0,0),vec3(0,0,1)]);
 
+
     console.log(scene.draw_end)
+
 
     const y = vec3(0,1,0);
     const view:mat4 = look_at(vec3(0,2,6.5),vec3(0,0,0),y);
@@ -33,11 +35,26 @@ export function main_3d() {
     const sun_light = new Light(
         vec3(10,10,10),
         vec3(1.0,0.95,0.9),
-        8.0,
+        6.0,
+        200.0
+    );
+    const second_sun = new Light(
+        vec3(10,-10,-10),
+        vec3(0.2,0.95,0.2),
+        6.0,
+        200.0
+    );
+    const third_sun = new Light(
+        vec3(10,10,10),
+        vec3(0.3,0.6,0.9),
+        6.0,
         200.0
     );
 
+
     scene.add_light(sun_light);
+    scene.add_light(second_sun);
+    scene.add_light(third_sun);
 
     const loop = () => {
         time += 0.01;
