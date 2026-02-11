@@ -7,6 +7,8 @@ import { Mesh } from "./rendering/types/mesh";
 import { Scene } from "./rendering/types/scene";
 import { mul_mat4 } from "./math/matrix_operators";
 import { build_scene } from "./to_html";
+import { process_world_coordinates } from "./rendering/process_lighting";
+import { Light } from "./rendering/types/light";
 
 
 export function main_3d() {
@@ -17,10 +19,9 @@ export function main_3d() {
     const sun_mesh = create_sphere(1.5, 32, 32); 
     const planet_mesh = create_sphere(0.5, 16, 16);
 
-    const scene:Scene = new Scene([sun_mesh,planet_mesh]);
+    const scene:Scene = new Scene([sun_mesh,planet_mesh],[vec3(1,0,0),vec3(0,0,1)]);
 
     console.log(scene.draw_end)
-
 
     const y = vec3(0,1,0);
     const view:mat4 = look_at(vec3(0,2,6.5),vec3(0,0,0),y);
@@ -28,6 +29,16 @@ export function main_3d() {
     let time = 0;
     const string_buffer = new StringBuffer(scene.scene_buffer.length * 50);
     const vp = mul_mat4(projection,view);
+
+    const sun_light = new Light(
+        vec3(10,10,10),
+        vec3(1.0,0.95,0.9),
+        8.0,
+        200.0
+    );
+
+    scene.add_light(sun_light);
+
     const loop = () => {
         time += 0.01;
 
@@ -35,13 +46,18 @@ export function main_3d() {
         let sun_model = identity();
         sun_model = rotate(sun_model, time * 0.5, y);
         let planet_model = identity();
+
         planet_model = rotate(planet_model, time, vec3(0, 1, 0));
         planet_model = translate(planet_model, vec3(3.5, 0, 0));
         planet_model = rotate(planet_model, time * 3, vec3(1, 0, 1));
 
         const planet_mvp = mul_mat4(vp,planet_model);
         const sun_mvp = mul_mat4(vp,sun_model);
-
+        const ar = [sun_model,planet_model]
+        for(let i = 0; i < 2; ++i){
+            scene.meshes[i].update_normals(ar[i]);
+        }
+        process_world_coordinates(scene,ar);
         render_scene(scene,[sun_mvp,planet_mvp],true);
         frame_html = build_scene(scene,do_wireframe,string_buffer);
 

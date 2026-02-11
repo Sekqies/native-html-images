@@ -4,7 +4,7 @@ import type { Mesh } from "./types/mesh";
 import { mul_mat4 } from "../math/matrix_operators";
 import { ArrayType, type mat4 } from "../math/types";
 import { transform_vertices } from "./clip_space/vertex";
-import { assemble_primitives } from "./screen_space/primitive_assembler";
+import { assemble_primitives } from "./clip_space/primitive_assembler";
 import type { StringBuffer } from "../utils/string_buffer";
 import type { Scene } from "./types/scene";
 

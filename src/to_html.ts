@@ -162,8 +162,11 @@ const PATH_TOKENS = {
     M: string_to_uint('M '),
     L: string_to_uint('L '),
     Z: string_to_uint('Z '),
+    COLOR_HEAD: string_to_uint('"fill="rgb('),
+    COMMA: character_to_uint(","),
+    RPAREN: character_to_uint(")"),
     TAIL_WIREFRAME: string_to_uint('" fill="none" stroke = "black" stroke-width = "0.005"/>'),
-    TAIL_SOLID: string_to_uint('" stroke="red" stroke-width = "0.005"/>')
+    TAIL_SOLID: string_to_uint('"stroke-width = "0.005"/>')
 };
 
 export function build_3d_svg(vertices:ArrayType, end:number, wireframe_mode:boolean,buffer:StringBuffer):string{
@@ -184,7 +187,7 @@ export function build_3d_svg(vertices:ArrayType, end:number, wireframe_mode:bool
         push_pair(x2,y2,buffer);
         buffer.write_chunk(PATH_TOKENS.L);
         push_pair(x3,y3,buffer);
-        buffer.write_chunk(PATH_TOKENS.Z);
+        buffer.write_chunk(PATH_TOKENS.Z); 
     }
     if(wireframe_mode){
         buffer.write_chunk(PATH_TOKENS.TAIL_WIREFRAME);
@@ -204,8 +207,12 @@ export function build_scene(scene:Scene, wireframe_mode: boolean, buffer:StringB
     if(wireframe_mode)
         buffer.write_chunk(PATH_TOKENS.HEAD);
     const vertices = scene.scene_buffer;
+    const colors = scene.raster_color;
     for(let i = 0; i < scene.draw_end; i++){
+        if(!wireframe_mode) 
+            buffer.write_chunk(PATH_TOKENS.HEAD);
         const index = scene.draw_order[i];
+        const c_index = index/3;
         const x1 = vertices[index];
         const y1 = vertices[index+1];
 
@@ -214,9 +221,12 @@ export function build_scene(scene:Scene, wireframe_mode: boolean, buffer:StringB
 
         const x3 = vertices[index+6];
         const y3 = vertices[index+7];
+        
+        const r = Math.floor(colors[c_index] * 255) || 0;
+        const g = Math.floor(colors[c_index + 1] * 255) || 0;
+        const b = Math.floor(colors[c_index + 2] * 255) || 0;
 
         if(!wireframe_mode)
-            buffer.write_chunk(PATH_TOKENS.HEAD);
         buffer.write_chunk(PATH_TOKENS.M);
         push_pair(x1,y1,buffer);
         buffer.write_chunk(PATH_TOKENS.L);
@@ -224,6 +234,16 @@ export function build_scene(scene:Scene, wireframe_mode: boolean, buffer:StringB
         buffer.write_chunk(PATH_TOKENS.L);
         push_pair(x3,y3,buffer);
         buffer.write_chunk(PATH_TOKENS.Z);
+
+        buffer.write_chunk(PATH_TOKENS.COLOR_HEAD);
+        buffer.write_float(r);
+        buffer.push(PATH_TOKENS.COMMA);
+        buffer.write_float(g);
+        buffer.push(PATH_TOKENS.COMMA);
+        buffer.write_float(b);
+        buffer.push(PATH_TOKENS.RPAREN);
+        
+
         if(!wireframe_mode)
             buffer.write_chunk(PATH_TOKENS.TAIL_SOLID);
     }

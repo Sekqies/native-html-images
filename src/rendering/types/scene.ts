@@ -8,6 +8,7 @@ export class Scene{
     scene_buffer!:ArrayType;
     color_buffer!:ArrayType
     draw_order!: IndexingType;
+    raster_color!: ArrayType;
     draw_end!:number;
     meshes!:Mesh[];
     lights!:Light[];
@@ -15,13 +16,14 @@ export class Scene{
     private scene_cursor = 0;
     private projected_cursor = 0;
     private color_cursor = 0;
+    private raster_color_cursor = 0;
 
     /**
      * Initialize a Scene instance
      * @param geometry If you want a static scene, provide a list of Geometries of all present meshes. If you want a scene that grows to a dynamically large value, provide the maximum number of triangles Scene will store.
      * @returns Nothing
      */
-    constructor(geometry: Geometry[] | number) {
+    constructor(geometry: Geometry[] | number, colors:vec3[] | null = null) {
         if (typeof geometry === "number") {
             this.reserve(geometry);
             return;
@@ -34,8 +36,13 @@ export class Scene{
             total_verts += g.vertices.length / 3;
         }
         this.reserve(total_tris);
-        for (let g of geometry) {
-            this.add_mesh(g);
+        if(colors === null){
+            colors = new Array(geometry.length);
+            colors.fill(vec3(0.2,0.2,0.2));
+        }
+        for (let i = 0; i < geometry.length; ++i) {
+            const g = geometry[i];
+            this.add_mesh(g,colors[i]);
         }
     }
     /**
@@ -46,7 +53,8 @@ export class Scene{
         this.scene_buffer = new ArrayType(max_triangles * 12);
         this.projected_buffer = new ArrayType(max_triangles * 12);
         this.draw_order = new IndexingType(max_triangles);
-        this.color_buffer = new ArrayType(max_triangles*3);
+        this.color_buffer = new ArrayType(max_triangles * 9);
+        this.raster_color = new ArrayType(max_triangles * 9);
         this.draw_end = 0;
         this.meshes = [];
         this.lights = [];
@@ -56,25 +64,28 @@ export class Scene{
         this.scene_cursor = 0;
         this.projected_cursor = 0;
         this.color_cursor = 0;
+        this.raster_color_cursor = 0;
         this.meshes = [];
         this.lights = [];
     }
 
-    add_mesh(geometry:Geometry, color:vec3 = vec3(0,0,0)):Mesh{
+    add_mesh(geometry:Geometry, color:vec3 = vec3(0.2,0.2,0.2)):Mesh{
         const scene_size = geometry.indices.length * 4;
         const proj_size = geometry.vertices.length/3*4;
-        const color_size = geometry.vertices.length;
+        const color_size = geometry.vertices.length * 3;
+        const raster_color_size = geometry.indices.length * 3;
 
         const scene_view = this.scene_buffer.subarray(this.scene_cursor, this.scene_cursor + scene_size);
         const proj_view = this.projected_buffer.subarray(this.projected_cursor,this.projected_cursor + proj_size);
         const color_view = this.color_buffer.subarray(this.color_cursor,this.color_cursor + color_size);
-
+        const raster_color = this.raster_color.subarray(this.raster_color_cursor,this.raster_color_cursor + raster_color_size);
 
         this.scene_cursor += scene_size;
         this.projected_cursor += proj_size;
         this.color_cursor += color_size;
+        this.raster_color_cursor += raster_color_size;
 
-        const mesh = new Mesh(geometry,color,scene_view,proj_view,color_view);
+        const mesh = new Mesh(geometry,color,raster_color,scene_view,proj_view,color_view);
         this.meshes.push(mesh);
         return mesh;
     }

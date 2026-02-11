@@ -11,6 +11,9 @@ import { process_perspective_mutate} from "../clip_space/vertex";
 export function rasterize(mesh:Mesh, invert_y:boolean = true, stride:number = 4):void {
     const vertices = mesh.raster_buffer;
     const out = mesh.raster_buffer;
+    const out_c = mesh.raster_color;
+    const colors = mesh.raster_color;
+    let out_color_index = 0;
     let out_index = 0;
     let c1:vec4, c2:vec4, c3:vec4;
     c1 = vec4(0,0,0,0);
@@ -64,6 +67,22 @@ export function rasterize(mesh:Mesh, invert_y:boolean = true, stride:number = 4)
         out[out_index++] = x3;
         out[out_index++] = y3;
         out[out_index++] = z3;
+
+        const color_base = i * 9;
+        
+        const r = (colors[color_base] + colors[color_base + 3] + colors[color_base + 6]) / 3;
+        const g = (colors[color_base + 1] + colors[color_base + 4] + colors[color_base + 7]) / 3;
+        const b = (colors[color_base + 2] + colors[color_base + 5] + colors[color_base + 8]) / 3;
+
+
+        if(isNaN(r) || isNaN(g) || isNaN(b)){
+            console.log(`(${r},${g},${b}) in ${color_base}`)
+            console.log(colors.subarray(color_base,color_base+9));
+        }
+
+        out_c[out_color_index++] = r;
+        out_c[out_color_index++] = g;
+        out_c[out_color_index++] = b;
     }
     mesh.raster_end = out_index;
 }
