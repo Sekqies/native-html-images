@@ -72,7 +72,7 @@ export class Scene{
         this.lights = [];
     }
 
-    add_mesh(geometry:Geometry, color:vec3 = vec3(0.2,0.2,0.2)):Mesh{
+    add_mesh(geometry:Geometry, color:vec3 = vec3(0.2,0.2,0.2), specular_coefficient:number = Math.random()):Mesh{
         const scene_size = geometry.indices.length * 4;
         const proj_size = geometry.vertices.length/3*4;
         const color_size = geometry.vertices.length;
@@ -92,7 +92,7 @@ export class Scene{
         this.color_cursor += color_size;
         this.raster_color_cursor += raster_color_size;
 
-        const mesh = new Mesh(geometry,color,raster_color,scene_view,proj_view,color_view);
+        const mesh = new Mesh(geometry,color,raster_color,scene_view,proj_view,color_view,specular_coefficient);
         this.meshes.push(mesh);
         return mesh;
     }

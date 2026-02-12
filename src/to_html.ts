@@ -165,7 +165,7 @@ const PATH_TOKENS = {
     COLOR_HEAD: string_to_uint('"fill="rgb('),
     COMMA: character_to_uint(","),
     RPAREN: character_to_uint(")"),
-    TAIL_WIREFRAME: string_to_uint('" fill="none" stroke = "black" stroke-width = "0.005"/>'),
+    TAIL_WIREFRAME: string_to_uint('" fill="none" stroke = "white" stroke-width = "0.005"/>'),
     TAIL_SOLID: string_to_uint('"stroke-width = "0.005"/>')
 };
 
@@ -226,7 +226,6 @@ export function build_scene(scene:Scene, wireframe_mode: boolean, buffer:StringB
         const g = Math.floor(colors[c_index + 1] * 255) || 0;
         const b = Math.floor(colors[c_index + 2] * 255) || 0;
 
-        if(!wireframe_mode)
         buffer.write_chunk(PATH_TOKENS.M);
         push_pair(x1,y1,buffer);
         buffer.write_chunk(PATH_TOKENS.L);
@@ -235,6 +234,9 @@ export function build_scene(scene:Scene, wireframe_mode: boolean, buffer:StringB
         push_pair(x3,y3,buffer);
         buffer.write_chunk(PATH_TOKENS.Z);
 
+        if(wireframe_mode) continue;
+
+
         buffer.write_chunk(PATH_TOKENS.COLOR_HEAD);
         buffer.write_float(r);
         buffer.push(PATH_TOKENS.COMMA);
@@ -242,10 +244,7 @@ export function build_scene(scene:Scene, wireframe_mode: boolean, buffer:StringB
         buffer.push(PATH_TOKENS.COMMA);
         buffer.write_float(b);
         buffer.push(PATH_TOKENS.RPAREN);
-        
-
-        if(!wireframe_mode)
-            buffer.write_chunk(PATH_TOKENS.TAIL_SOLID);
+        buffer.write_chunk(PATH_TOKENS.TAIL_SOLID);
     }
     if(wireframe_mode){
         buffer.write_chunk(PATH_TOKENS.TAIL_WIREFRAME);

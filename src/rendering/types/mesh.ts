@@ -4,23 +4,25 @@ import type { Geometry } from "./geometry";
 
 
 export class Mesh{
-    vertices: ArrayType
-    indices: IndexingType
-    local_normals: ArrayType
-    projected_buffer: ArrayType
-    raster_buffer: ArrayType
-    color_buffer: ArrayType
-    raster_color: ArrayType
+    vertices: ArrayType;
+    indices: IndexingType;
+    local_normals: ArrayType;
+    projected_buffer: ArrayType;
+    raster_buffer: ArrayType;
+    color_buffer: ArrayType;
+    raster_color: ArrayType;
     normals: ArrayType;
     albedo: vec3;
-    raster_end:number
-    visible_triangles_count:number
+    specular_coefficient: number;
+    raster_end:number;
+    visible_triangles_count:number;
 
-    constructor(geometry:Geometry, albedo:vec3 = vec3(0,0,0), raster_color:ArrayType, raster_buffer:ArrayType | null = null, projected_buffer:ArrayType | null = null, color_buffer:ArrayType | null = null){
+    constructor(geometry:Geometry, albedo:vec3 = vec3(0,0,0), raster_color:ArrayType, raster_buffer:ArrayType | null = null, projected_buffer:ArrayType | null = null, color_buffer:ArrayType | null = null, specular_coefficient:number = Math.random()){
         this.vertices = geometry.vertices;
         this.indices = geometry.indices;
         this.raster_color = raster_color;
         this.local_normals = geometry.normals;
+        this.specular_coefficient = specular_coefficient;
         this.normals = new ArrayType(geometry.indices.length*3);
         if(projected_buffer === null)
             this.projected_buffer = new ArrayType(this.vertices.length * 4 / 3);
@@ -54,4 +56,7 @@ export class Mesh{
         }
     }
 }
+
+
+
 

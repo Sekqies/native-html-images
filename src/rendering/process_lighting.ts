@@ -5,12 +5,15 @@ import type { Mesh } from "./types/mesh";
 import type { Scene } from "./types/scene";
 
 
-export function process_lighting(mesh:Mesh, scene:Scene){
+export function process_lighting(mesh:Mesh, scene:Scene, camera_coords:vec3 | null = null){
     const world_coordinates = mesh.projected_buffer;
     const lights = scene.lights;
     let vertex:vec3 = vec3(0,0,0);
     const k = 0.01;
+    const specular_k = mesh.specular_coefficient;
+    const shininess = 16;
     let index = 0;
+
     for(let i = 0; i < world_coordinates.length; i+=4){
         vertex[0] = world_coordinates[i];
         vertex[1] = world_coordinates[i+1];
@@ -31,11 +34,32 @@ export function process_lighting(mesh:Mesh, scene:Scene){
             if (dist > light.radius){
                 continue;
             }
-            const dot = L[0] * nx + L[1] * ny + L[2] * nz;
+            const dot = L[0] * nx + L[1] * ny + L[2] * nz;  
             const diffuse = Math.max(0,dot);
-            const window = 1*Math.pow(Math.max(0, 1 - Math.pow(dist / light.radius, 4)), 2)
+            const window = 1//*Math.pow(Math.max(0, 1 - Math.pow(dist / light.radius, 4)), 2)
             const attenuation = light.intensity/(1.0 + k*(dist*dist)) * window;
-            const strength = diffuse * attenuation;
+
+            let spec_contrib = 0;
+
+            if(camera_coords != null){
+                const twice_diffuse = diffuse * 2;
+                const rx = twice_diffuse * nx - L[0];
+                const ry = twice_diffuse * ny - L[1];
+                const rz = twice_diffuse * nz - L[2];
+
+                let vx = camera_coords[0] - vertex[0];
+                let vy = camera_coords[1] - vertex[1];
+                let vz = camera_coords[2] - vertex[2];
+                const vlen = Math.sqrt(vx*vx + vy*vy + vz*vz);
+                vx /= vlen; vy /= vlen; vz /= vlen;
+
+                const rdotv = rx * vx + ry * vy + rz * vz;
+                const spec = Math.max(0,Math.pow(rdotv,shininess));
+                spec_contrib = spec * specular_k
+            }
+            
+            const strength = (diffuse + spec_contrib) * attenuation;
+            
             color[0] += light.color[0] * strength;
             color[1] += light.color[1] * strength;
             color[2] += light.color[2] * strength;
@@ -49,7 +73,13 @@ export function process_lighting(mesh:Mesh, scene:Scene){
     }
 }
 
-export function process_world_coordinates(scene:Scene, model:mat4[]){
+/**
+ * Does all processing necessary in world space.
+ * @param scene The Scene to be processed
+ * @param model The corresponding Model matrix for each mesh contained in the scene.
+ */
+
+export function process_world_coordinates(scene:Scene, model:mat4[], camera_coord:vec3 | null = null){
     let v:vec4 = vec4(0,0,0,0);
     let mesh_index = 0;
     for(const mesh of scene.meshes){
@@ -67,6 +97,6 @@ export function process_world_coordinates(scene:Scene, model:mat4[]){
             mesh.projected_buffer[out_index++] = v[2];
             mesh.projected_buffer[out_index++] = v[3];
         }
-        process_lighting(mesh,scene);
+        process_lighting(mesh,scene,camera_coord);
     }
 }
