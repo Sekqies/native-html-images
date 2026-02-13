@@ -53,7 +53,7 @@ export function rasterize(mesh:Mesh, invert_y:boolean = true, stride:number = 4)
         const area = (x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1);
 
         if (area <= 0) {
-            continue; 
+           continue; 
         }
 
         out[out_index++] = x1;
@@ -73,12 +73,6 @@ export function rasterize(mesh:Mesh, invert_y:boolean = true, stride:number = 4)
         const r = (colors[color_base] + colors[color_base + 3] + colors[color_base + 6]) / 3;
         const g = (colors[color_base + 1] + colors[color_base + 4] + colors[color_base + 7]) / 3;
         const b = (colors[color_base + 2] + colors[color_base + 5] + colors[color_base + 8]) / 3;
-
-
-        if(isNaN(r) || isNaN(g) || isNaN(b)){
-            console.log(`(${r},${g},${b}) in ${color_base}`)
-            console.log(colors.subarray(color_base,color_base+9));
-        }
 
         out_c[out_color_index++] = r;
         out_c[out_color_index++] = g;

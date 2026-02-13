@@ -77,6 +77,7 @@ export function process_lighting(mesh:Mesh, scene:Scene, camera_coords:vec3 | nu
  * Does all processing necessary in world space.
  * @param scene The Scene to be processed
  * @param model The corresponding Model matrix for each mesh contained in the scene.
+ * @param camera_coord The coordinate of the Camera (pass this if you want a functioning reflection model)
  */
 
 export function process_world_coordinates(scene:Scene, model:mat4[], camera_coord:vec3 | null = null){

@@ -9,7 +9,10 @@ import { mul_mat4 } from "./math/matrix_operators";
 import { build_scene } from "./to_html";
 import { process_world_coordinates } from "./rendering/process_lighting";
 import { Light } from "./rendering/types/light";
+import { parse_obj } from "./utils/parser";
+import type { Geometry } from "./rendering/types/geometry";
 
+let uploaded_geometry:Geometry|null = null;
 
 function generate_random_lights(LIGHT_COUNT:number, scene:Scene){
     const lights = [];
@@ -38,6 +41,9 @@ function generate_random_lights(LIGHT_COUNT:number, scene:Scene){
 let animation_id:number|null = null;
 
 
+const frame_max = 1000;
+let frame_count = 0;
+
 export function main_3d() {
     if(animation_id !== null){
         cancelAnimationFrame(animation_id);
@@ -50,10 +56,9 @@ export function main_3d() {
     const planet_geo = create_sphere(0.5, 16, 16);
     const bulb_geo = create_sphere(0.15, 8, 8); 
 
-    const scene: Scene = new Scene(40000);
+    const scene: Scene = new Scene(sun_geo.indices.length + planet_geo.indices.length + bulb_geo.indices.length*32);
     scene.add_mesh(sun_geo,vec3(0.4,0.3,0.6),0.7);
     scene.add_mesh(planet_geo,vec3(0.7,0.6,0.8));
-    scene.add_mesh(bulb_geo,vec3(1,1,0.8));
 
     const camera_pos:vec3 = vec3(0,2,6.5);
 
@@ -79,8 +84,18 @@ export function main_3d() {
     scene.add_light(point_light);
     const do_wireframe: boolean = wireframe_el?.checked;
 
+
+    let start = performance.now();
+
+
     const loop = () => {
         time += 0.01;
+        frame_count++;
+        if(frame_count > frame_max){
+            const end = performance.now();
+            console.log(end-start);
+            frame_count = 0;
+        }
 
         const lx = Math.cos(time * 2) * 2.5;
         const ly = Math.sin(time * 2) * 2.5;
@@ -97,7 +112,7 @@ export function main_3d() {
 
         let bulb_model = translate(identity(), vec3(lx, ly, lz));
 
-        const models = [sun_model, planet_model, bulb_model];
+        const models = [sun_model, planet_model,bulb_model];
         
         point_light.position[0] = lx;
         point_light.position[1] = ly;
@@ -132,4 +147,71 @@ export function main_3d() {
     animation_id = requestAnimationFrame(loop);
 }
 
+export function load_file(){
+    
+}
+
 document.getElementById('render')?.addEventListener('click', main_3d);
+
+const file_content = document.getElementById('file-picker');
+
+export async function handle_file(event:Event){
+    const target = event.target as HTMLInputElement;
+    if(!target.files) return;
+    const file = target.files[0];
+    const geometry = parse_obj(await file.text());
+    render_preview(geometry);
+}
+
+let preview_animation_id:number|null = null;
+let zoom_distance = 1.0; 
+
+function render_preview(geo: Geometry) {
+    if (preview_animation_id !== null) {
+        cancelAnimationFrame(preview_animation_id);
+    }
+
+    const target = document.getElementById('model-preview-container');
+    if (!target) return;
+
+    target.onwheel = (e: WheelEvent) => {
+        e.preventDefault();
+        const zoomSpeed = 1.0;
+        zoom_distance += e.deltaY > 0 ? zoomSpeed : -zoomSpeed;
+        zoom_distance = Math.max(1.0, Math.min(zoom_distance, 200.0));
+    };
+
+    const scene = new Scene(geo.indices.length);
+    const mesh_ref = scene.add_mesh(geo, vec3(0.5, 0.8, 0.5), 0.8);
+    
+    const preview_light = new Light(vec3(100, 100, 100), vec3(1, 1, 1), 120.0, 5000.0);
+    scene.add_light(preview_light);
+
+    const string_buffer = new StringBuffer(scene.scene_buffer.length * 60);
+    let rotation_time = 0;
+
+const preview_loop = () => {
+    rotation_time += 0.02;
+
+    const camera_pos = vec3(0, 0, zoom_distance);
+    const view = look_at(camera_pos, vec3(0, 0, 0), vec3(0, 1, 0));
+    const projection = perspective(45 * Math.PI / 180, 1, 0.1, 100);
+    const vp = mul_mat4(projection, view);
+
+    const rotation_matrix = rotate(identity(), rotation_time, vec3(0, 1, 0));
+    
+    let model_matrix = rotation_matrix; 
+
+    mesh_ref.update_normals(model_matrix);
+    process_world_coordinates(scene, [model_matrix],camera_pos);
+    
+    render_scene(scene, [mul_mat4(vp, model_matrix)], true);
+    
+    target.innerHTML = build_scene(scene, false, string_buffer);
+    preview_animation_id = requestAnimationFrame(preview_loop);
+};
+
+    preview_loop();
+}
+
+file_content?.addEventListener('change',handle_file);
