@@ -137,7 +137,7 @@ export function main_3d() {
             scene.meshes[i].update_normals(models[i]);
         }
         
-        process_world_coordinates(scene, models);
+        process_world_coordinates(scene, models, camera_pos);
         render_scene(scene, mvps, true);
         
         const frame_html = build_scene(scene, do_wireframe, string_buffer);
@@ -170,7 +170,7 @@ function render_preview(geo: Geometry) {
     if (preview_animation_id !== null) {
         cancelAnimationFrame(preview_animation_id);
     }
-
+    console.log(geo.vertices);
     const target = document.getElementById('model-preview-container');
     if (!target) return;
 

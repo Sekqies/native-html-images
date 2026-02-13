@@ -1,4 +1,4 @@
-import { ArrayType, IndexingType } from "../math/types";
+import { ArrayType, IndexingType, vec3 } from "../math/types";
 import { Geometry } from "../rendering/types/geometry";
 
 function center_geometry(geo: Geometry): void {
@@ -26,6 +26,23 @@ function center_geometry(geo: Geometry): void {
         v[i]     -= centerX;
         v[i + 1] -= centerY;
         v[i + 2] -= centerZ;
+    }
+}
+
+function normalize_geometry(geo:Geometry): void {
+    let max = -Infinity;
+    for(let i = 0; i < geo.vertices.length; i+=3){
+        max = Math.max(max,geo.vertices[i])
+        max = Math.max(max,geo.vertices[i+1])
+        max = Math.max(max,geo.vertices[i+2])
+    }   
+    if(max===0){
+        max = 1;
+    }
+    for(let i = 0; i < geo.vertices.length; i+=3){
+        geo.vertices[i] /= max;
+        geo.vertices[i+1] /= max;
+        geo.vertices[i+2] /= max;
     }
 }
 
@@ -79,5 +96,6 @@ export function parse_obj(file:string):Geometry{
     }
     const geo = new Geometry(vertices,indices);
     center_geometry(geo);
+    normalize_geometry(geo);
     return geo;
 }

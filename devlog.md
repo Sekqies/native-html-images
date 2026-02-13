@@ -1,18 +1,14 @@
-And let there be light!
+Our graphics engine is done!
 
-Simulating light is the single thing that graphics programming (and hardware!) has been developing towards in the past few decades or so. This is because, in the real world, light behaves in a very complicated manner, of which only the great GPU that runs the universe can render, so we can only ever approximate how it truly behaves. You may have heard the terms _raytracing_ or _raymarching_ before, and those are just that: approximations of how light behaves.
+Or as done as it can be, really. A true graphics engine would have many other things: textures, multicolored meshes, fragment shaders, interpolation and many other things that are a consequence of the literal decades put into developing this area. It is, however, _good enough_, when you take into account the limitations that svg imposes upon us.
 
-For our (very limited) graphics engine though, we have to do just the basics: get the color of vertex after being under the effect of multiple punctual lights. This is a task with many steps: 
+First things first, a careful eye might have noticed that the last rendering scene missed a certain 'reflection' you get from illuminating most objects. Think of the litte white spot you see in a billiard ball when it's put against a light source - this is something that emerges naturally whenever you have a reflective surface, because it's just a result of light reflecting on it and going directly to your eyes. 
+To make our rendered meshes have the same effect, we implement something called the Phong reflection model, which is the "algorithm" (or, to better put it, formulas) to calculate the light that'll go to our eyes. This is a relatively expensive operation (involves exponentiating by 64), so I left it as an optinal feature, per object.
 
-First, we have to figure out where each one of our vertices are pointing. This is called a _normal_, and we use to find what the intensity of the light shining on a face will have. Logically this is a factor: if you hold your phone against the sun, the side facing it will be bright, and the one facing _you_ won't.
-Then, we have to figure out the resulting light on a vertex. This is **additive**: we just have to sum all the incoming lights and intensities into one. Then, we have to take into account the object's original color for the resulting color: this is **multiplicative**
-The final step is drawing these colors into the screen. Usually, we'd take the colored vertices for each triangle and interpolate them, but this is impossible in svg: we have to assign each face a single color. We do this by taking the average of each vertex.
-
-This implies more memory usage to store everything needed: meshes, colors, lights, etc. So, as usual, a complete refactor of `Scene` to make it easier to use. 
-Attached: the lights!
+Second, and the reason that I'm saying that the engine is "complete", is that we can now just read data from an `.obj` file and it will be rendered to the screen (after I wrote the parser for it, of course).
+We can render meshes with a surprisingly high number of triangles with this method. I could, (running at around ~3 fps), render a model of the Eiffel Tower with over 400k triangles!
+Attached, renders of some more complex 3D models!
 
 **Commits**
-[795addc](https://url.jam06452.uk/1dmb9jx): Added lighting
-[b7ce605](https://url.jam06452.uk/1dsik8b): Added normals
-[1c48364](https://url.jam06452.uk/i83mp3): Lighting almost finished
-[0324cd9](https://url.jam06452.uk/rstls4): Lighting working!
+[Commit 9b2fdb3](https://github.com/Sekqies/native-html-images/commit/9b2fdb380168e8b45290ce3911ab5e9e0c30f234): Added specular lighting
+[Commit e91435b](https://github.com/Sekqies/native-html-images/commit/e91435b7ee373333b1a42de204adcc528b3571d7): Adedd obj parsing
