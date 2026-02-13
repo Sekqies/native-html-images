@@ -207,7 +207,7 @@ const preview_loop = () => {
     
     render_scene(scene, [mul_mat4(vp, model_matrix)], true);
     
-    target.innerHTML = build_scene(scene, false, string_buffer);
+    target.innerHTML = build_scene(scene, true, string_buffer);
     preview_animation_id = requestAnimationFrame(preview_loop);
 };
 

@@ -5,11 +5,15 @@ export class Geometry{
     vertices:ArrayType;
     indices:IndexingType;
     normals:ArrayType;
-    constructor(vertices:ArrayType, indices:IndexingType){
+    constructor(vertices:ArrayType, indices:IndexingType, normals:ArrayType | null = null){
         this.vertices = vertices;
         this.indices = indices; 
-        this.normals = new ArrayType(this.vertices.length);
-        this.compute_normals();
+        if(normals !== null)
+            this.normals = normals;
+        else{
+            this.normals = new ArrayType(this.vertices.length);
+            this.compute_normals();
+        }
     }
     private compute_normals() {
         const inds = this.indices;
