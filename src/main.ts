@@ -12,7 +12,6 @@ import { Light } from "./rendering/types/light";
 import { parse_obj } from "./utils/parser";
 import type { Geometry } from "./rendering/types/geometry";
 
-let uploaded_geometry:Geometry|null = null;
 
 function generate_random_lights(LIGHT_COUNT:number, scene:Scene){
     const lights = [];
@@ -40,7 +39,6 @@ function generate_random_lights(LIGHT_COUNT:number, scene:Scene){
 
 let animation_id:number|null = null;
 
-
 const frame_max = 1000;
 let frame_count = 0;
 
@@ -52,8 +50,10 @@ export function main_3d() {
     if (!target) return;
     const wireframe_el = document.getElementById('wireframe-mode') as HTMLInputElement;
 
-    const sun_geo = create_sphere(1.5, 32, 32); 
-    const planet_geo = create_sphere(0.5, 16, 16);
+    const RESOLUTION = 32;
+
+    const sun_geo = create_sphere(1.5, RESOLUTION, RESOLUTION); 
+    const planet_geo = create_sphere(0.5, RESOLUTION/2, RESOLUTION/2);
     const bulb_geo = create_sphere(0.15, 8, 8); 
 
     const scene: Scene = new Scene(sun_geo.indices.length + planet_geo.indices.length + bulb_geo.indices.length*32);
@@ -207,7 +207,7 @@ const preview_loop = () => {
     
     render_scene(scene, [mul_mat4(vp, model_matrix)], true);
     
-    target.innerHTML = build_scene(scene, true, string_buffer);
+    target.innerHTML = build_scene(scene, false, string_buffer);
     preview_animation_id = requestAnimationFrame(preview_loop);
 };
 
