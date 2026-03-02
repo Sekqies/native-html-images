@@ -1,6 +1,6 @@
 import { mat4, vec3 } from "./math/types";
 import { perspective, identity, look_at, rotate, translate } from "./math/transformations";
-import { create_sphere } from "./rendering/utils/primitives";
+import { create_3d_ngon, create_antiprism, create_sphere, create_torus } from "./rendering/utils/primitives";
 import { build_mesh, render_scene } from "./rendering/render";
 import { StringBuffer } from "./utils/string_buffer";
 import { Mesh } from "./rendering/types/mesh";
@@ -52,7 +52,7 @@ export function main_3d() {
 
     const RESOLUTION = 32;
 
-    const sun_geo = create_sphere(1.5, RESOLUTION, RESOLUTION); 
+    const sun_geo = create_antiprism(RESOLUTION,1,1)
     const planet_geo = create_sphere(0.5, RESOLUTION/2, RESOLUTION/2);
     const bulb_geo = create_sphere(0.15, 8, 8); 
 

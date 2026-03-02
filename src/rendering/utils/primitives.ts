@@ -100,47 +100,44 @@ export function create_flat_ngon(n:number, side_length:number, axis:vec3 | null 
 
 export function create_3d_ngon(
     n: number, 
-    side_length: number, 
-    depth_length: number | null,
-    axis: vec3 | null = null, 
-    angle: number | null = null, 
-    translate_vec: vec3 | null = null
+    width: number, 
+    height: number | null = null,
 ): Geometry {
-    if (n <= 2) {
-        console.warn("Invalid n - There are no polygons of dimension 2 or less.");
-        throw new Error("Cannot create a polygon with less than 3 sides.");
-    }
-    let depth = side_length;
-    if(depth_length) 
-        depth = depth_length;
+    return create_fustrum(n,width,width,height? height: width);
+}
 
-    const vertice_count = 2 + (2 * n); 
-    
-    const triangle_count = n * 4; 
+export function create_fustrum(
+    n:number,
+    bottom_radius:number,
+    top_radius:number,
+    height:number
+): Geometry{
+    const vertice_count = 2 + (2 * n);
+    const triangle_count = n * 4;
 
     const vertices = new ArrayType(vertice_count * 3);
     const indices = new IndexingType(triangle_count * 3);
 
-    const radius = side_length / (2 * Math.sin(Math.PI / n));
     const theta_step = (Math.PI * 2) / n;
+    const h2 = height / 2;
 
-    vertices[0] = 0; vertices[1] = 0; vertices[2] = -depth / 2;
-    vertices[3] = 0; vertices[4] = 0; vertices[5] = depth / 2;
+    vertices[0] = 0; vertices[1] = 0; vertices[2] = -h2;
+    vertices[3] = 0; vertices[4] = 0; vertices[5] = h2;
 
     let vert_i = 6;
 
     for (let i = 0; i < n; i++) {
         const theta = theta_step * i;
-        vertices[vert_i++] = Math.cos(theta) * radius;
-        vertices[vert_i++] = Math.sin(theta) * radius;
-        vertices[vert_i++] = -depth / 2;
+        vertices[vert_i++] = Math.cos(theta) * bottom_radius;
+        vertices[vert_i++] = Math.sin(theta) * bottom_radius;
+        vertices[vert_i++] = -h2;
     }
 
     for (let i = 0; i < n; i++) {
         const theta = theta_step * i;
-        vertices[vert_i++] = Math.cos(theta) * radius;
-        vertices[vert_i++] = Math.sin(theta) * radius;
-        vertices[vert_i++] = depth / 2;
+        vertices[vert_i++] = Math.cos(theta) * top_radius;
+        vertices[vert_i++] = Math.sin(theta) * top_radius;
+        vertices[vert_i++] = h2;
     }
 
     let ind_i = 0;
@@ -152,38 +149,81 @@ export function create_3d_ngon(
         const top_next = 2 + n + ((i + 1) % n);
 
         indices[ind_i++] = 0;
-        indices[ind_i++] = bottom_next;
         indices[ind_i++] = bottom_current;
+        indices[ind_i++] = bottom_next;
 
         indices[ind_i++] = 1;
-        indices[ind_i++] = top_current;
         indices[ind_i++] = top_next;
+        indices[ind_i++] = top_current;
 
         indices[ind_i++] = bottom_current;
-        indices[ind_i++] = bottom_next;
         indices[ind_i++] = top_current;
+        indices[ind_i++] = bottom_next;
 
         indices[ind_i++] = bottom_next;
+        indices[ind_i++] = top_current;
         indices[ind_i++] = top_next;
-        indices[ind_i++] = top_current;
     }
-
-    let transform: mat4 = identity();
-
-    if (angle && axis) transform = rotate(transform, angle, axis);
-    if (translate_vec) transform = translate(transform, translate_vec);
-
-    let vert = vec3(0, 0, 0);
-    let out = vec4(0, 0, 0, 0); 
-    for (let i = 0; i < vertices.length; i += 3) {
-        vert[0] = vertices[i]; vert[1] = vertices[i + 1]; vert[2] = vertices[i + 2];
-        transform_vertex_mutate(transform, vert, out);
-        vertices[i] = out[0]; vertices[i + 1] = out[1]; vertices[i + 2] = out[2];
-    }
-
     return new Geometry(vertices, indices);
 }
 
+
+export function create_antiprism(
+    n: number, 
+    radius: number, 
+    height: number,
+): Geometry {
+    if (n < 3) throw new Error("n must be at least 3.");
+
+    const vertice_count = 2 + (2 * n);
+    const vertices = new ArrayType(vertice_count * 3);
+    
+    const indices = new IndexingType((n + n + 2 * n) * 3);
+
+    const theta_step = (Math.PI * 2) / n;
+    const half_step = theta_step / 2;
+    const h2 = height / 2;
+
+    vertices[0] = 0; vertices[1] = 0; vertices[2] = -h2; 
+    vertices[3] = 0; vertices[4] = 0; vertices[5] = h2; 
+
+    for (let i = 0; i < n; i++) {
+        const theta = i * theta_step;
+    
+        vertices[(2 + i) * 3 + 0] = Math.cos(theta) * radius;
+        vertices[(2 + i) * 3 + 1] = Math.sin(theta) * radius;
+        vertices[(2 + i) * 3 + 2] = -h2;
+
+        vertices[(2 + n + i) * 3 + 0] = Math.cos(theta + half_step) * radius;
+        vertices[(2 + n + i) * 3 + 1] = Math.sin(theta + half_step) * radius;
+        vertices[(2 + n + i) * 3 + 2] = h2;
+    }
+
+let ii = 0;
+    for (let i = 0; i < n; i++) {
+        const b_curr = 2 + i;
+        const b_next = 2 + ((i + 1) % n);
+        const t_curr = 2 + n + i;
+        const t_next = 2 + n + ((i + 1) % n);
+        
+        indices[ii++] = 0;
+        indices[ii++] = b_curr;
+        indices[ii++] = b_next;
+        
+        indices[ii++] = 1;
+        indices[ii++] = t_next;
+        indices[ii++] = t_curr;
+        
+        indices[ii++] = b_curr;
+        indices[ii++] = t_curr; 
+        indices[ii++] = b_next;
+        
+        indices[ii++] = b_next;
+        indices[ii++] = t_curr;
+        indices[ii++] = t_next;
+    }
+    return new Geometry(vertices, indices);
+}
 
 
 export function create_torus(
@@ -226,12 +266,12 @@ export function create_torus(
             const second = first + slices + 1;
 
             indices[ind_i++] = first;
-            indices[ind_i++] = second;
             indices[ind_i++] = first + 1;
+            indices[ind_i++] = second;
 
             indices[ind_i++] = second;
-            indices[ind_i++] = second + 1;
             indices[ind_i++] = first + 1;
+            indices[ind_i++] = second + 1;
         }
     }
 
