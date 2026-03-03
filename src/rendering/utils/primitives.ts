@@ -274,7 +274,41 @@ export function create_torus(
             indices[ind_i++] = second + 1;
         }
     }
-
-
     return new Geometry(vertices, indices);
+}
+
+export function merge_geometries(geo1:Geometry, geo2:Geometry) : Geometry{
+    const n1 = geo1.vertices.length;
+    const n2 = geo2.vertices.length;
+    
+    const new_vertices = new ArrayType(n1 + n2);
+    new_vertices.set(geo1.vertices);
+    new_vertices.set(geo2.vertices,n1);
+
+    const n_i1 = geo1.indices.length;
+    const n_i2 = geo2.indices.length;
+
+    const new_indices = new IndexingType(n_i1 + n_i2);
+    new_vertices.set(geo1.indices);
+    new_vertices.set(geo2.vertices,n_i1);
+
+    const offset = n1 / 3;
+    for(let i = 0; i < n_i2; ++i){
+        new_indices[n_i1 + i] = geo2.indices[i] + offset;
+    }
+    return new Geometry(new_vertices,new_indices);
+
+}
+
+export function create_arrow(
+    shaft_radius:number = 0.05,
+    shaft_length:number = 1.0,
+    head_radius:number = 0.15,
+    head_length:number = 0.3
+): Geometry{
+    const shaft = create_fustrum(8, shaft_radius, shaft_radius, shaft_length);
+    for (let i = 2; i < shaft.vertices.length; i += 3) shaft.vertices[i] += shaft_length / 2;
+    const head = create_fustrum(8, head_radius, 0, head_length);
+    for (let i = 2; i < head.vertices.length; i += 3) head.vertices[i] += shaft_length + (head_length / 2);
+    return merge_geometries(shaft,head);
 }

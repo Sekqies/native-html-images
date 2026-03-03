@@ -1,8 +1,7 @@
-import { vec3 } from "../math/types";
+import { vec3, vec4, type Line } from "../math/types";
 import { perspective } from "../math/transformations";
-import { mul_mat4 } from "../math/matrix_operators";
+import { inverse_mat4, mul_mat4, mul_mat4_vec4, normalize_vec3 } from "../math/matrix_operators";
 import { Scene } from "../rendering/types/scene";
-import { Mesh } from "../rendering/types/mesh";
 import { Light } from "../rendering/types/light";
 import { Geometry } from "../rendering/types/geometry";
 import { build_scene } from "../to_html";
@@ -57,6 +56,7 @@ export class SceneManager {
 
         this.setup_lights();
         this.update_stats_ui();
+        this.setup_raycasting();
 
         initialize_toolbar(toolbar_id, options_id, (geo: Geometry) => {
             this.add_node(geo);
@@ -155,5 +155,59 @@ export class SceneManager {
         this.target_element.innerHTML = build_scene(this.scene, do_wireframe, this.string_buffer);
 
         this.animation_id = requestAnimationFrame(this.loop);
+    }
+    private setup_raycasting() {
+        this.target_element.addEventListener("mousedown", (e: MouseEvent) => {
+            if (e.button !== 0) return;
+
+            const rect = this.target_element.getBoundingClientRect();
+            const mouse_x = e.clientX - rect.left;
+            const mouse_y = e.clientY - rect.top;
+
+            const x_ndc = (2.0 * mouse_x) / rect.width - 1.0;
+            const y_ndc = 1.0 - (2.0 * mouse_y) / rect.height; 
+
+            const view = this.viewport.get_view_matrix();
+            const projection = perspective(60 * Math.PI / 180, 400 / 300, 0.1, 100);
+            const vp = mul_mat4(projection, view);
+            const inv_vp = inverse_mat4(vp);
+
+            if (!inv_vp) return;
+
+            const near_vec = vec4(x_ndc, y_ndc, -1.0, 1.0);
+            const near_unproj = mul_mat4_vec4(inv_vp, near_vec);
+            const near_point = vec3(
+                near_unproj[0] / near_unproj[3],
+                near_unproj[1] / near_unproj[3],
+                near_unproj[2] / near_unproj[3]
+            );
+
+            const far_vec = vec4(x_ndc, y_ndc, 1.0, 1.0);
+            const far_unproj = mul_mat4_vec4(inv_vp, far_vec);
+            const far_point = vec3(
+                far_unproj[0] / far_unproj[3],
+                far_unproj[1] / far_unproj[3],
+                far_unproj[2] / far_unproj[3]
+            );
+
+            const direction = vec3(
+                far_point[0] - near_point[0],
+                far_point[1] - near_point[1],
+                far_point[2] - near_point[2]
+            );
+            normalize_vec3(direction);
+
+            const ray: Line = {
+                point: this.viewport.camera_pos,
+                directional_vector: direction
+            };
+
+            for (const node of this.nodes) {
+                if (node.intersects_with(ray)) {
+                    this.select_node(node);
+                    break;
+                }
+            }
+        });
     }
 }

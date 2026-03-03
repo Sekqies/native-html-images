@@ -1,6 +1,7 @@
-import { mat4, vec3, type Line } from "../../math/types";
+import { mat4, vec3, vec4, type Line } from "../../math/types";
 import { identity, translate, rotate, scale } from "../../math/transformations";
 import type { Mesh } from "./mesh";
+import { inverse_mat4, mul_mat4_vec4 } from "../../math/matrix_operators";
 
 export class Node {
     mesh: Mesh;
@@ -11,11 +12,12 @@ export class Node {
     radius_reciprocal:vec3 = vec3(1,1,1);
     
     model: mat4 = identity();
+    inverse_model: mat4 = identity();
 
     constructor(mesh: Mesh) {
         this.mesh = mesh;
         this.update_matrix();
-        this.determine_radius;
+        this.determine_radius();
     }
 
     private determine_radius(){
@@ -35,10 +37,14 @@ export class Node {
 
 
     intersects_with(line:Line){
-        const [ux,uy,uz] = line.directional_vector;
-        const px = line.point[0] - this.position[0];
-        const py = line.point[1] - this.position[1];
-        const pz = line.point[2] - this.position[2];
+        const local_origin = mul_mat4_vec4(this.inverse_model,vec4(line.point[0],line.point[1],line.point[2],1.0));
+        const local_dir = mul_mat4_vec4(this.inverse_model,vec4(line.directional_vector[0],line.directional_vector[1],line.directional_vector[2],0.0));
+
+        
+        const [ux,uy,uz,uu] = local_dir;
+        const px = local_origin[0];
+        const py = local_origin[1]
+        const pz = local_origin[2]
 
         const [recip_a,recip_b,recip_c] = this.radius_reciprocal;
         const A = ux * ux * recip_a + uy * uy * recip_b + uz * uz * recip_c;
@@ -52,6 +58,8 @@ export class Node {
         const delta = B*B - 4 * A * C;
         return delta >= 0;
     }
+
+
     
 
 
@@ -68,5 +76,6 @@ export class Node {
         m = scale(m, this.scale_vec);
 
         this.model = m;
+        this.inverse_model = inverse_mat4(this.model);
     }
 }
