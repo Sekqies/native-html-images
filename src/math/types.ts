@@ -3,6 +3,11 @@ export const IndexingType = Uint32Array;
 export type ArrayType = InstanceType<typeof ArrayType>
 export type IndexingType = InstanceType<typeof IndexingType>
 
+export type Line = {
+    directional_vector:vec3,
+    point:vec3
+}
+
 export type vec2 = ArrayType;
 export type vec3 = ArrayType;
 export type vec4 = ArrayType;

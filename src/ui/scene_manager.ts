@@ -65,9 +65,9 @@ export class SceneManager {
 
     private setup_lights() {
         const sun_light = new Light(vec3(10, 10, 10), vec3(1.0, 0.95, 0.9), 3.0, 200.0);
-        const point_light = new Light(vec3(0, 5, 0), vec3(1.0, 1.0, 0.8), 5.0, 15.0);
+        const leskow_light = new Light(vec3(5,0,0),vec3(0.8,0.2,0.0), 2.0, 100.0);
         this.scene.add_light(sun_light);
-        this.scene.add_light(point_light);
+        this.scene.add_light(leskow_light);
     }
 
     public add_node(geo: Geometry) {
@@ -150,7 +150,7 @@ export class SceneManager {
         process_world_coordinates(this.scene, models, camera_pos);
 
         const do_wireframe = this.wireframe_checkbox?.checked || false;
-        render_scene(this.scene, mvps, do_wireframe);
+        render_scene(this.scene, mvps, true);
 
         this.target_element.innerHTML = build_scene(this.scene, do_wireframe, this.string_buffer);
 
