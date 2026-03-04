@@ -17,6 +17,8 @@ import type { EditorMode } from "./state_manager";
 import { EditorState } from "./state_manager";
 
 import { parse_obj } from "../utils/parser";
+import * as primitives from "../rendering/utils/primitives";
+
 
 export class SceneManager {
     public scene: Scene;
@@ -71,7 +73,7 @@ export class SceneManager {
 
         initialize_toolbar(toolbar_id, options_id, (geo: Geometry) => {
             this.add_node(geo);
-        });
+        }, () => this.add_point_light());
     }
 
     private setup_lights() {
@@ -104,6 +106,20 @@ export class SceneManager {
         this.select_node(node);
     }
 
+    public add_point_light() {
+        const new_light = new Light(vec3(0, 0, 0), vec3(1.0, 1.0, 1.0), 2.0, 50.0);
+        this.scene.add_light(new_light);
+
+        const bulb_geo = primitives.create_sphere(0.2, 8, 8); 
+        
+        const mesh = this.scene.add_mesh(bulb_geo, vec3(1.0, 1.0, 0.0), 0.5);
+
+        const light_node = new Node(mesh, new_light);
+        
+        this.nodes.push(light_node); 
+        this.select_node(light_node);
+    }
+
     private expand_capacity(required_triangles: number) {
         let new_capacity = this.current_capacity * 2;
         if (new_capacity < required_triangles) new_capacity = required_triangles;
@@ -111,13 +127,7 @@ export class SceneManager {
 
         
         this.scene.resize_buffers(new_capacity);
-
-        if (typeof this.string_buffer.resize === 'function') {
-            this.string_buffer.resize(new_capacity * 60); 
-        } else {
-            console.warn("StringBuffer.resize() is not implemented yet!");
-        }
-        
+        this.string_buffer.resize(new_capacity * 60); 
         this.current_capacity = new_capacity;
     }
 

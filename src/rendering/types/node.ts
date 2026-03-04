@@ -2,6 +2,7 @@ import { mat4, vec3, vec4, type Line } from "../../math/types";
 import { identity, translate, rotate, scale } from "../../math/transformations";
 import type { Mesh } from "./mesh";
 import { inverse_mat4, mul_mat4_vec4 } from "../../math/matrix_operators";
+import type { Light } from "./light";
 
 export class Node {
     mesh: Mesh;
@@ -10,12 +11,18 @@ export class Node {
     public scale_vec: vec3 = vec3(1, 1, 1);
     public radius:vec3 = vec3(1,1,1);
     public radius_reciprocal:vec3 = vec3(1,1,1);
+
+    public light: Light | null = null;
     
     model: mat4 = identity();
     inverse_model: mat4 = identity();
 
-    constructor(mesh: Mesh) {
+    constructor(mesh: Mesh, light:Light | null = null) {
         this.mesh = mesh;
+        this.light = light;
+        if(this.light){
+            this.light.position = this.position;
+        }
         this.update_matrix();
         this.determine_radius();
     }

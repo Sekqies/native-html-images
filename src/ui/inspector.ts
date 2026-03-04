@@ -1,3 +1,4 @@
+import type { ArrayType } from "../math/types";
 import type { Node } from "../rendering/types/node";
 
 export class Inspector {
@@ -5,7 +6,6 @@ export class Inspector {
     public current_node: Node | null = null;
 
     private move_speed = 0.5;
-    private rot_speed = 0.26; 
     private scale_factor = 0.1;
 
     constructor(container_id: string) {
@@ -46,6 +46,7 @@ export class Inspector {
         table.setAttribute("border", "0");
         table.setAttribute("cellpadding", "2");
         this.container.appendChild(table);
+
         this.create_action_row(table, "Move X", 
             () => { node.position[0] -= this.move_speed; node.update_matrix(); },
             () => { node.position[0] += this.move_speed; node.update_matrix(); }
@@ -61,18 +62,18 @@ export class Inspector {
 
         this.add_divider(table);
 
-        this.create_action_row(table, "Rotate X", 
-            () => { node.rotation[0] -= this.rot_speed; node.update_matrix(); },
-            () => { node.rotation[0] += this.rot_speed; node.update_matrix(); }
-        );
-        this.create_action_row(table, "Rotate Y", 
-            () => { node.rotation[1] -= this.rot_speed; node.update_matrix(); },
-            () => { node.rotation[1] += this.rot_speed; node.update_matrix(); }
-        );
-        this.create_action_row(table, "Rotate Z", 
-            () => { node.rotation[2] -= this.rot_speed; node.update_matrix(); },
-            () => { node.rotation[2] += this.rot_speed; node.update_matrix(); }
-        );
+        this.create_slider_row(table, "Rotate X", "-3.14", "3.14", "0.01", node.rotation[0], (v) => {
+            node.rotation[0] = v;
+            node.update_matrix();
+        });
+        this.create_slider_row(table, "Rotate Y", "-3.14", "3.14", "0.01", node.rotation[1], (v) => {
+            node.rotation[1] = v;
+            node.update_matrix();
+        });
+        this.create_slider_row(table, "Rotate Z", "-3.14", "3.14", "0.01", node.rotation[2], (v) => {
+            node.rotation[2] = v;
+            node.update_matrix();
+        });
 
         this.add_divider(table);
 
@@ -93,8 +94,44 @@ export class Inspector {
 
         this.add_divider(table);
 
-        if (node.mesh && node.mesh.albedo) {
-            this.create_color_row(table, "Color", node.mesh.albedo);
+        if (node.mesh && node.mesh.albedo && !node.light) {
+            this.create_color_row(table, "Color", node.mesh.albedo, node.mesh.albedo);
+        }
+
+        if (node.light) {
+            this.add_divider(table);
+
+            const tr_light = document.createElement("tr");
+            const td_light = document.createElement("td");
+            td_light.setAttribute("colspan", "3");
+            const b_light = document.createElement("b");
+            const font_light = document.createElement("font");
+            font_light.setAttribute("face", "Arial");
+            font_light.innerText = "Light Properties";
+            b_light.appendChild(font_light);
+            td_light.appendChild(b_light);
+            tr_light.appendChild(td_light);
+            table.appendChild(tr_light);
+
+            const light = node.light;
+
+            this.create_action_row(table, "Intensity", 
+                () => { light.intensity -= 0.1; },
+                () => { light.intensity += 0.1; }
+            );
+
+            this.create_action_row(table, "Radius", 
+                () => { light.radius -= 1.0; },
+                () => { light.radius += 1.0; }
+            );
+
+            this.create_color_row(table, "Emission", light.color, node.mesh.albedo);
+
+            if (false) {
+                this.create_slider_row(table, "Cutoff", "0.0", "3.14", "0.01", Math.acos(light.cutoff || 1.0), (v) => {
+                    light.cutoff = Math.cos(v);
+                });
+            }
         }
     }
 
@@ -138,7 +175,7 @@ export class Inspector {
         table.appendChild(tr);
     }
 
-    private create_color_row(table: HTMLElement, label: string, color_vec: Float32Array | number[]) {
+    private create_slider_row(table: HTMLElement, label: string, min: string, max: string, step: string, value: number, on_change: (val: number) => void) {
         const tr = document.createElement("tr");
 
         const td_label = document.createElement("td");
@@ -149,6 +186,42 @@ export class Inspector {
 
         const td_input = document.createElement("td");
         td_input.setAttribute("colspan", "2");
+
+        const input = document.createElement("input");
+        input.type = "range";
+        input.min = min;
+        input.max = max;
+        input.step = step;
+        input.value = value.toString();
+
+        const val_font = document.createElement("font");
+        val_font.setAttribute("face", "monospace");
+        val_font.innerText = " " + value.toFixed(2);
+
+        input.addEventListener("input", (e) => {
+            const num = parseFloat((e.target as HTMLInputElement).value);
+            val_font.innerText = " " + num.toFixed(2);
+            on_change(num);
+        });
+
+        td_input.appendChild(input);
+        td_input.appendChild(val_font);
+        tr.appendChild(td_label);
+        tr.appendChild(td_input);
+        table.appendChild(tr);
+    }
+
+    private create_color_row(table: HTMLElement, label: string, color_vec: ArrayType | number[], albedo: ArrayType) {
+        const tr = document.createElement("tr");
+
+        const td_label = document.createElement("td");
+        const font = document.createElement("font");
+        font.setAttribute("face", "Arial");
+        font.innerText = `${label}: `;
+        td_label.appendChild(font);
+
+        const td_input = document.createElement("td");
+        td_input.setAttribute("colspan", "2"); 
         
         const color_picker = document.createElement("input");
         color_picker.type = "color";
@@ -159,10 +232,13 @@ export class Inspector {
         color_picker.value = `#${r}${g}${b}`;
 
         color_picker.addEventListener("input", (e) => {
-            const hex = (e.target as HTMLInputElement).value;            
+            const hex = (e.target as HTMLInputElement).value;
             color_vec[0] = parseInt(hex.substring(1, 3), 16) / 255.0;
             color_vec[1] = parseInt(hex.substring(3, 5), 16) / 255.0;
             color_vec[2] = parseInt(hex.substring(5, 7), 16) / 255.0;
+            albedo[0] = color_vec[0];
+            albedo[1] = color_vec[1];
+            albedo[2] = color_vec[2];
         });
 
         td_input.appendChild(color_picker);
