@@ -29,7 +29,7 @@ function center_geometry(geo: Geometry): void {
     }
 }
 
-function normalize_geometry(geo:Geometry): void {
+export function normalize_geometry(geo:Geometry): void {
     let max = -Infinity;
     for(let i = 0; i < geo.vertices.length; i+=3){
         max = Math.max(max,geo.vertices[i])

@@ -179,6 +179,8 @@ export class SceneManager {
             if (e.button !== 0) return;
 
             this.is_dragging = true;
+            this.last_mx = e.clientX;
+            this.last_my = e.clientY;
 
             const rect = this.target_element.getBoundingClientRect();
             const mouse_x = e.clientX - rect.left;
@@ -188,7 +190,7 @@ export class SceneManager {
             const y_ndc = 1.0 - (2.0 * mouse_y) / rect.height; 
 
             const view = this.viewport.get_view_matrix();
-            const projection = this.viewport.get_view_matrix();
+            const projection = this.viewport.get_projection();
             const vp = mul_mat4(projection, view);
             const inv_vp = inverse_mat4(vp);
 
@@ -235,7 +237,12 @@ export class SceneManager {
             this.last_my = e.clientY;
 
             if (this.editor_state.mode !== "IDLE") {
-                this.editor_state.handle_mouse_move(e.clientX, e.clientY);
+                const view = this.viewport.get_view_matrix();
+                const projection = this.viewport.get_projection();
+                const vp = mul_mat4(projection,view);
+
+                const {width,height} = this.viewport.get_dimensions();
+                this.editor_state.handle_mouse_move(e.clientX, e.clientY,vp,width,height);
             } else {
                 this.viewport.orbit(dx, dy);
             }
