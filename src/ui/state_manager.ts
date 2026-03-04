@@ -4,7 +4,6 @@ import type { Line, mat4 } from "../math/types";
 import { Inspector } from "./inspector";
 import { create_arrow } from "../rendering/utils/primitives";
 import type { Scene } from "../rendering/types/scene";
-import { scale } from "../math/transformations";
 import { mul_mat4_vec4, scalar_mult_vec3 } from "../math/matrix_operators";
 
 export type EditorMode = "IDLE" | "TRANSLATE_X" | "TRANSLATE_Y" | "TRANSLATE_Z";

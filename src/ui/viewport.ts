@@ -17,7 +17,7 @@ export class Viewport {
 
     private changed_projection = false;
 
-    private container: HTMLElement;
+    public container: HTMLElement;
     
 
     constructor(container_id: string) {

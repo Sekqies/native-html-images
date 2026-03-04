@@ -16,6 +16,8 @@ import { Node } from "../rendering/types/node";
 import type { EditorMode } from "./state_manager";
 import { EditorState } from "./state_manager";
 
+import { parse_obj } from "../utils/parser";
+
 export class SceneManager {
     public scene: Scene;
     public nodes: Node[] = [];
@@ -174,6 +176,50 @@ export class SceneManager {
 
         this.animation_id = requestAnimationFrame(this.loop);
     }
+
+    private get_mouse_ray(e: MouseEvent): Line | null {
+        const rect = this.target_element.getBoundingClientRect();
+        const mouse_x = e.clientX - rect.left;
+        const mouse_y = e.clientY - rect.top;
+
+        const x_ndc = (2.0 * mouse_x) / rect.width - 1.0;
+        const y_ndc = 1.0 - (2.0 * mouse_y) / rect.height; 
+
+        const view = this.viewport.get_view_matrix();
+        const projection = this.viewport.get_projection();
+        const vp = mul_mat4(projection, view);
+        const inv_vp = inverse_mat4(vp);
+
+        if (!inv_vp) return null;
+
+        const near_vec = vec4(x_ndc, y_ndc, -1.0, 1.0);
+        const near_unproj = mul_mat4_vec4(inv_vp, near_vec);
+        const near_point = vec3(
+            near_unproj[0] / near_unproj[3],
+            near_unproj[1] / near_unproj[3],
+            near_unproj[2] / near_unproj[3]
+        );
+
+        const far_vec = vec4(x_ndc, y_ndc, 1.0, 1.0);
+        const far_unproj = mul_mat4_vec4(inv_vp, far_vec);
+        const far_point = vec3(
+            far_unproj[0] / far_unproj[3],
+            far_unproj[1] / far_unproj[3],
+            far_unproj[2] / far_unproj[3]
+        );
+
+        const direction = vec3(
+            far_point[0] - near_point[0],
+            far_point[1] - near_point[1],
+            far_point[2] - near_point[2]
+        );
+        normalize_vec3(direction);
+
+        return {
+            point: this.viewport.camera_pos,
+            directional_vector: direction
+        };
+    }
     private setup_raycasting() {
         this.target_element.addEventListener("mousedown", (e: MouseEvent) => {
             if (e.button !== 0) return;
@@ -182,53 +228,25 @@ export class SceneManager {
             this.last_mx = e.clientX;
             this.last_my = e.clientY;
 
-            const rect = this.target_element.getBoundingClientRect();
-            const mouse_x = e.clientX - rect.left;
-            const mouse_y = e.clientY - rect.top;
-
-            const x_ndc = (2.0 * mouse_x) / rect.width - 1.0;
-            const y_ndc = 1.0 - (2.0 * mouse_y) / rect.height; 
-
-            const view = this.viewport.get_view_matrix();
-            const projection = this.viewport.get_projection();
-            const vp = mul_mat4(projection, view);
-            const inv_vp = inverse_mat4(vp);
-
-            if (!inv_vp) return;
-
-            const near_vec = vec4(x_ndc, y_ndc, -1.0, 1.0);
-            const near_unproj = mul_mat4_vec4(inv_vp, near_vec);
-            const near_point = vec3(
-                near_unproj[0] / near_unproj[3],
-                near_unproj[1] / near_unproj[3],
-                near_unproj[2] / near_unproj[3]
-            );
-
-            const far_vec = vec4(x_ndc, y_ndc, 1.0, 1.0);
-            const far_unproj = mul_mat4_vec4(inv_vp, far_vec);
-            const far_point = vec3(
-                far_unproj[0] / far_unproj[3],
-                far_unproj[1] / far_unproj[3],
-                far_unproj[2] / far_unproj[3]
-            );
-
-            const direction = vec3(
-                far_point[0] - near_point[0],
-                far_point[1] - near_point[1],
-                far_point[2] - near_point[2]
-            );
-            normalize_vec3(direction);
-
-            const ray: Line = {
-                point: this.viewport.camera_pos,
-                directional_vector: direction
-            };
+            const ray = this.get_mouse_ray(e);
+            if(!ray) return;
 
             this.editor_state.handle_mouse_down(ray, e.clientX, e.clientY, this.nodes);
             this.selected_node = this.editor_state.selected_node;
         });
         window.addEventListener("mousemove", (e: MouseEvent) => {
-            if (!this.is_dragging) return;
+            if (!this.is_dragging && this.editor_state.selected_node){
+                const ray = this.get_mouse_ray(e);
+                if(!ray) return;
+                const is_hovering = 
+                this.editor_state.gizmo_x.intersects_with(ray) ||
+                this.editor_state.gizmo_y.intersects_with(ray) ||
+                this.editor_state.gizmo_z.intersects_with(ray);
+                this.target_element.style.cursor = is_hovering ? "pointer" : "default";
+                return;
+            }
+
+            if(!this.is_dragging) return;
             
             const dx = e.clientX - this.last_mx;
             const dy = e.clientY - this.last_my;

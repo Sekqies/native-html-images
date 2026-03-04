@@ -5,11 +5,11 @@ import { inverse_mat4, mul_mat4_vec4 } from "../../math/matrix_operators";
 
 export class Node {
     mesh: Mesh;
-    position: vec3 = vec3(0,0,0);
-    rotation: vec3 = vec3(0, 0, 0); 
-    scale_vec: vec3 = vec3(1, 1, 1);
-    radius:vec3 = vec3(1,1,1);
-    radius_reciprocal:vec3 = vec3(1,1,1);
+    public position: vec3 = vec3(0,0,0);
+    public rotation: vec3 = vec3(0, 0, 0); 
+    public scale_vec: vec3 = vec3(1, 1, 1);
+    public radius:vec3 = vec3(1,1,1);
+    public radius_reciprocal:vec3 = vec3(1,1,1);
     
     model: mat4 = identity();
     inverse_model: mat4 = identity();
@@ -38,7 +38,7 @@ export class Node {
 
     intersects_with(line:Line){
         if(!this.inverse_model) return false;
-        
+
 
 
         const local_origin = mul_mat4_vec4(this.inverse_model,vec4(line.point[0],line.point[1],line.point[2],1.0));
