@@ -18,7 +18,7 @@ import { EditorState } from "./state_manager";
 
 import { parse_obj } from "../utils/parser";
 import * as primitives from "../rendering/utils/primitives";
-
+import { Rotator, Oscillator, Orbit } from "./animation";
 
 export class SceneManager {
     public scene: Scene;
@@ -26,7 +26,7 @@ export class SceneManager {
     
     private viewport: Viewport;
     private inspector: Inspector;
-    private editor_state:EditorState
+    private editor_state: EditorState
     
     private target_element: HTMLElement;
     private wireframe_checkbox: HTMLInputElement;
@@ -36,14 +36,19 @@ export class SceneManager {
     private animation_id: number | null = null;
     public selected_node: Node | null = null;
 
-    private last_mx:number = 0;
-    private last_my:number = 0;
+    private last_mx: number = 0;
+    private last_my: number = 0;
 
     private is_dragging = false;
 
     public current_triangles: number = 0;
     public current_capacity: number = 50000;
     public readonly MAX_TRIANGLES: number = 100000;
+
+    private is_playing = false;
+    private current_time = 0;
+    private last_frame_time = 0;
+    private initial_states: Map<Node, any> = new Map();
 
     constructor(
         svg_container_id: string,
@@ -65,25 +70,49 @@ export class SceneManager {
         
         this.viewport = new Viewport(svg_container_id);
         this.inspector = new Inspector(inspector_id);
-        this.editor_state = new EditorState(this.inspector,this.scene);
+        this.editor_state = new EditorState(this.inspector, this.scene);
 
         this.setup_lights();
         this.update_stats_ui();
         this.setup_raycasting();
 
-        initialize_toolbar(toolbar_id, options_id, (geo: Geometry) => {
-            this.add_node(geo);
-        }, () => this.add_point_light());
+        initialize_toolbar(
+            toolbar_id, 
+            options_id, 
+            (geo: Geometry, color: number[]) => {
+                this.add_node(geo, color);
+            }, 
+            (intensity: number, radius: number, color: number[]) => {
+                this.add_point_light(intensity, radius, color);
+            },
+            (action: "play" | "pause" | "stop") => {
+                this.handle_playback(action);
+            },
+            (type: string, params: number[]) => {
+                if (!this.selected_node) {
+                    alert("Select a node first!");
+                    return;
+                }
+                const any_node = this.selected_node as any;
+                if (!any_node.animations) any_node.animations = [];
+                
+                if (type === "Rotator") any_node.animations.push(new Rotator(params[0], params[1]));
+                else if (type === "Oscillator") any_node.animations.push(new Oscillator(params[0], params[1], params[2], params[3]));
+                else if (type === "Orbit") any_node.animations.push(new Orbit(params[0], params[1], params[2], params[3]));
+                
+                this.inspector.inspect(this.selected_node);
+            }
+        );
     }
 
     private setup_lights() {
         const sun_light = new Light(vec3(10, 10, 10), vec3(1.0, 0.95, 0.9), 3.0, 200.0);
-        const leskow_light = new Light(vec3(5,0,0),vec3(0.8,0.2,0.0), 2.0, 100.0);
+        const leskow_light = new Light(vec3(5, 0, 0), vec3(0.8, 0.2, 0.0), 2.0, 100.0);
         this.scene.add_light(sun_light);
         this.scene.add_light(leskow_light);
     }
 
-    public add_node(geo: Geometry) {
+    public add_node(geo: Geometry, color_arr: number[] = [0.7, 0.7, 0.7]) {
         const new_triangles = geo.indices.length / 3;
 
         if (this.current_triangles + new_triangles > this.MAX_TRIANGLES) {
@@ -95,7 +124,7 @@ export class SceneManager {
             this.expand_capacity(this.current_triangles + new_triangles);
         }
 
-        const mesh = this.scene.add_mesh(geo, vec3(0.7, 0.7, 0.7), 0.5); 
+        const mesh = this.scene.add_mesh(geo, vec3(color_arr[0], color_arr[1], color_arr[2]), 0.5); 
         
         const node = new Node(mesh);
         this.nodes.push(node);
@@ -106,13 +135,14 @@ export class SceneManager {
         this.select_node(node);
     }
 
-    public add_point_light() {
-        const new_light = new Light(vec3(0, 0, 0), vec3(1.0, 1.0, 1.0), 2.0, 50.0);
+    public add_point_light(intensity: number, radius: number, color_arr: number[] = [1.0, 1.0, 1.0]) {
+        const light_color = vec3(color_arr[0], color_arr[1], color_arr[2]);
+        const new_light = new Light(vec3(0, 0, 0), light_color, intensity, radius);
         this.scene.add_light(new_light);
 
         const bulb_geo = primitives.create_sphere(0.2, 8, 8); 
         
-        const mesh = this.scene.add_mesh(bulb_geo, vec3(1.0, 1.0, 0.0), 0.5);
+        const mesh = this.scene.add_mesh(bulb_geo, light_color, 0.5);
 
         const light_node = new Node(mesh, new_light);
         
@@ -125,7 +155,6 @@ export class SceneManager {
         if (new_capacity < required_triangles) new_capacity = required_triangles;
         if (new_capacity > this.MAX_TRIANGLES) new_capacity = this.MAX_TRIANGLES;
 
-        
         this.scene.resize_buffers(new_capacity);
         this.string_buffer.resize(new_capacity * 60); 
         this.current_capacity = new_capacity;
@@ -148,14 +177,74 @@ export class SceneManager {
         this.editor_state.select(this.selected_node);
     }
 
+    public handle_playback(action: "play" | "pause" | "stop") {
+        if (action === "play") {
+            if (!this.is_playing) {
+                this.last_frame_time = performance.now();
+                this.is_playing = true;
+                for (const node of this.nodes) {
+                    if (!this.initial_states.has(node)) {
+                        this.initial_states.set(node, {
+                            pos: [...node.position],
+                            rot: [...node.rotation]
+                        });
+                    }
+                }
+            }
+        } else if (action === "pause") {
+            this.is_playing = false;
+        } else if (action === "stop") {
+            this.is_playing = false;
+            this.current_time = 0;
+            for (const node of this.nodes) {
+                const state = this.initial_states.get(node);
+                if (state) {
+                    node.position[0] = state.pos[0];
+                    node.position[1] = state.pos[1];
+                    node.position[2] = state.pos[2];
+                    node.rotation[0] = state.rot[0];
+                    node.rotation[1] = state.rot[1];
+                    node.rotation[2] = state.rot[2];
+                    node.update_matrix();
+                }
+            }
+            this.initial_states.clear();
+            if (this.selected_node) {
+                this.editor_state.update_gizmo_transforms();
+                this.inspector.inspect(this.selected_node);
+            }
+        }
+    }
+
     public start() {
         if (this.animation_id !== null) {
             cancelAnimationFrame(this.animation_id);
         }
+        this.last_frame_time = performance.now();
         this.loop();
     }
 
     private loop = () => {
+        const now = performance.now();
+        const dt = (now - this.last_frame_time) / 1000.0;
+        this.last_frame_time = now;
+
+        if (this.is_playing) {
+            this.current_time += dt;
+            for (const node of this.nodes) {
+                const any_node = node as any;
+                if (any_node.animations && any_node.animations.length > 0) {
+                    for (const anim of any_node.animations) {
+                        anim.apply(node, this.current_time, dt);
+                    }
+                    node.update_matrix();
+                }
+            }
+            if (this.selected_node && (this.selected_node as any).animations && (this.selected_node as any).animations.length > 0) {
+                this.inspector.inspect(this.selected_node);
+            }
+        }
+
         const camera_pos = this.viewport.camera_pos;
         const view = this.viewport.get_view_matrix();
         const projection = this.viewport.get_projection();
@@ -230,6 +319,7 @@ export class SceneManager {
             directional_vector: direction
         };
     }
+
     private setup_raycasting() {
         this.target_element.addEventListener("mousedown", (e: MouseEvent) => {
             if (e.button !== 0) return;
@@ -239,24 +329,25 @@ export class SceneManager {
             this.last_my = e.clientY;
 
             const ray = this.get_mouse_ray(e);
-            if(!ray) return;
+            if (!ray) return;
 
             this.editor_state.handle_mouse_down(ray, e.clientX, e.clientY, this.nodes);
             this.selected_node = this.editor_state.selected_node;
         });
+
         window.addEventListener("mousemove", (e: MouseEvent) => {
-            if (!this.is_dragging && this.editor_state.selected_node){
+            if (!this.is_dragging && this.editor_state.selected_node) {
                 const ray = this.get_mouse_ray(e);
-                if(!ray) return;
+                if (!ray) return;
                 const is_hovering = 
-                this.editor_state.gizmo_x.intersects_with(ray) ||
-                this.editor_state.gizmo_y.intersects_with(ray) ||
-                this.editor_state.gizmo_z.intersects_with(ray);
+                    this.editor_state.gizmo_x.intersects_with(ray) ||
+                    this.editor_state.gizmo_y.intersects_with(ray) ||
+                    this.editor_state.gizmo_z.intersects_with(ray);
                 this.target_element.style.cursor = is_hovering ? "pointer" : "default";
                 return;
             }
 
-            if(!this.is_dragging) return;
+            if (!this.is_dragging) return;
             
             const dx = e.clientX - this.last_mx;
             const dy = e.clientY - this.last_my;
@@ -267,14 +358,15 @@ export class SceneManager {
             if (this.editor_state.mode !== "IDLE") {
                 const view = this.viewport.get_view_matrix();
                 const projection = this.viewport.get_projection();
-                const vp = mul_mat4(projection,view);
+                const vp = mul_mat4(projection, view);
 
-                const {width,height} = this.viewport.get_dimensions();
-                this.editor_state.handle_mouse_move(e.clientX, e.clientY,vp,width,height);
+                const { width, height } = this.viewport.get_dimensions();
+                this.editor_state.handle_mouse_move(e.clientX, e.clientY, vp, width, height);
             } else {
                 this.viewport.orbit(dx, dy);
             }
         });
+
         window.addEventListener("mouseup", () => {
             this.is_dragging = false; 
             this.editor_state.handle_mouse_up();

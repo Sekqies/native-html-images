@@ -133,6 +133,46 @@ export class Inspector {
                 });
             }
         }
+
+        const any_node = node as any;
+        if (any_node.animations && any_node.animations.length > 0) {
+            this.add_divider(table);
+
+            const tr_anim = document.createElement("tr");
+            const td_anim = document.createElement("td");
+            td_anim.setAttribute("colspan", "3");
+            const b_anim = document.createElement("b");
+            const font_anim = document.createElement("font");
+            font_anim.setAttribute("face", "Arial");
+            font_anim.innerText = "Animations";
+            b_anim.appendChild(font_anim);
+            td_anim.appendChild(b_anim);
+            tr_anim.appendChild(td_anim);
+            table.appendChild(tr_anim);
+
+            any_node.animations.forEach((anim: any, idx: number) => {
+                const tr = document.createElement("tr");
+                const td_name = document.createElement("td");
+                td_name.setAttribute("colspan", "2");
+                const f_name = document.createElement("font");
+                f_name.setAttribute("face", "Arial");
+                f_name.innerText = anim.name;
+                td_name.appendChild(f_name);
+
+                const td_btn = document.createElement("td");
+                const btn = document.createElement("button");
+                btn.innerText = "Remove";
+                btn.onclick = () => {
+                    any_node.animations.splice(idx, 1);
+                    this.inspect(node);
+                };
+                td_btn.appendChild(btn);
+
+                tr.appendChild(td_name);
+                tr.appendChild(td_btn);
+                table.appendChild(tr);
+            });
+        }
     }
 
     private clear() {

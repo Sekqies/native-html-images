@@ -106,7 +106,9 @@ export function initialize_toolbar(
     toolbar_container_id: string,
     options_container_id: string,
     on_create_geometry: (geo: Geometry, color: number[]) => void,
-    on_create_light: (intensity: number, radius: number, color: number[]) => void
+    on_create_light: (intensity: number, radius: number, color: number[]) => void,
+    on_playback_action: (action: "play" | "pause" | "stop") => void,
+    on_add_animation: (type: string, params: number[]) => void
 ): void {
     const toolbar_el = document.getElementById(toolbar_container_id);
     const options_el = document.getElementById(options_container_id);
@@ -114,6 +116,25 @@ export function initialize_toolbar(
     if (!toolbar_el || !options_el) return;
 
     toolbar_el.innerHTML = ""; 
+
+    const playback_container = create_category(toolbar_el, "Playback", true);
+    
+    const play_btn = document.createElement("button");
+    play_btn.innerHTML = "<b>Play</b>";
+    play_btn.onclick = () => on_playback_action("play");
+    
+    const pause_btn = document.createElement("button");
+    pause_btn.innerHTML = "<b>Pause</b>";
+    pause_btn.onclick = () => on_playback_action("pause");
+    
+    const stop_btn = document.createElement("button");
+    stop_btn.innerHTML = "<b>Stop</b>";
+    stop_btn.onclick = () => on_playback_action("stop");
+    
+    playback_container.appendChild(play_btn);
+    playback_container.appendChild(pause_btn);
+    playback_container.appendChild(stop_btn);
+    playback_container.appendChild(document.createElement("br"));
 
     const primitives_container = create_category(toolbar_el, "Primitives", true);
     
@@ -280,4 +301,93 @@ export function initialize_toolbar(
 
     const import_container = create_category(toolbar_el, "Import", false);
     create_file_input(import_container, options_el, on_create_geometry);
+
+    const anim_container = create_category(toolbar_el, "Animations", false);
+
+    const anims = [
+        {
+            name: "Rotator",
+            params: [
+                { name: "Axis (0=X,1=Y,2=Z)", min: "0", max: "2", step: "1", default: "1" },
+                { name: "Speed", min: "-5", max: "5", step: "0.1", default: "1.0" }
+            ]
+        },
+        {
+            name: "Oscillator",
+            params: [
+                { name: "Axis (0=X,1=Y,2=Z)", min: "0", max: "2", step: "1", default: "1" },
+                { name: "Speed", min: "0.1", max: "10", step: "0.1", default: "2.0" },
+                { name: "Amplitude", min: "0.1", max: "10", step: "0.1", default: "1.0" },
+                { name: "Base Value", min: "-10", max: "10", step: "0.1", default: "0.0" }
+            ]
+        },
+        {
+            name: "Orbit",
+            params: [
+                { name: "Speed", min: "-5", max: "5", step: "0.1", default: "1.0" },
+                { name: "Radius", min: "0.1", max: "20", step: "0.1", default: "5.0" },
+                { name: "Center X", min: "-10", max: "10", step: "0.1", default: "0.0" },
+                { name: "Center Z", min: "-10", max: "10", step: "0.1", default: "0.0" }
+            ]
+        }
+    ];
+
+    anims.forEach(anim => {
+        const btn = document.createElement("button");
+        btn.innerText = anim.name;
+        
+        btn.addEventListener("click", () => {
+            options_el.innerHTML = `<h3><font face="Arial">${anim.name} Options</font></h3>`;
+            
+            const inputs: HTMLInputElement[] = [];
+            
+            anim.params.forEach(param => {
+                const label = document.createElement("label");
+                const font = document.createElement("font");
+                font.setAttribute("face", "Arial");
+                font.innerText = `${param.name}: `;
+                label.appendChild(font);
+
+                const input = document.createElement("input");
+                input.type = "range";
+                input.min = param.min;
+                input.max = param.max;
+                input.step = param.step;
+                input.value = param.default;
+
+                const val_display = document.createElement("span");
+                const val_font = document.createElement("font");
+                val_font.setAttribute("face", "monospace");
+                val_font.innerText = input.value;
+                val_display.appendChild(val_font);
+
+                input.addEventListener("input", () => {
+                    val_font.innerText = input.value;
+                });
+
+                inputs.push(input);
+
+                options_el.appendChild(label);
+                options_el.appendChild(input);
+                options_el.appendChild(val_display);
+                options_el.appendChild(document.createElement("br"));
+                options_el.appendChild(document.createElement("br"));
+            });
+
+            const create_btn = document.createElement("button");
+            const b = document.createElement("b");
+            b.innerText = "Add to Selected";
+            create_btn.appendChild(b);
+            
+            create_btn.addEventListener("click", () => {
+                const args = inputs.map(input => parseFloat(input.value));
+                on_add_animation(anim.name, args);
+            });
+
+            options_el.appendChild(create_btn);
+        });
+        
+        anim_container.appendChild(btn);
+        anim_container.appendChild(document.createElement("br"));
+    });
 }
