@@ -108,7 +108,8 @@ export function initialize_toolbar(
     on_create_geometry: (geo: Geometry, color: number[]) => void,
     on_create_light: (intensity: number, radius: number, color: number[], casts_shadow:boolean) => void,
     on_playback_action: (action: "play" | "pause" | "stop") => void,
-    on_add_animation: (type: string, params: number[]) => void
+    on_add_animation: (type: string, params: number[]) => void,
+    on_load_sample: () => void
 ): void {
     const toolbar_el = document.getElementById(toolbar_container_id);
     const options_el = document.getElementById(options_container_id);
@@ -415,4 +416,19 @@ export function initialize_toolbar(
         anim_container.appendChild(btn);
         anim_container.appendChild(document.createElement("br"));
     });
+
+    const samples_container = create_category(toolbar_el, "Samples", false);
+    
+    const sample_btn = document.createElement("button");
+    const b_sample = document.createElement("b");
+    b_sample.innerText = "Load Solar System Scene";
+    sample_btn.appendChild(b_sample);
+
+    sample_btn.addEventListener("click", () => {
+        options_el.innerHTML = `<h3><font face="Arial">Sample Scene</font></h3><font size="2" color="gray">Loading the animated sample scene...</font>`;
+        on_load_sample();
+    });
+
+    samples_container.appendChild(sample_btn);
+    samples_container.appendChild(document.createElement("br"));
 }

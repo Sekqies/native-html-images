@@ -9,17 +9,16 @@ export class Viewport {
     public theta: number = Math.PI / 4;
     public phi: number = Math.PI / 6;  
 
-    public projection:mat4 = perspective(60 * Math.PI / 180, 400 / 300, 0.1, 100);
+    public projection: mat4 = perspective(60 * Math.PI / 180, 400 / 300, 0.1, 100);
 
     private last_mouse_x = 0;
     private last_mouse_y = 0;
     private is_dragging = false;
 
-    private changed_projection = false;
+    private changed_projection = true;
 
     public container: HTMLElement;
     
-
     constructor(container_id: string) {
         const el = document.getElementById(container_id);
         if (!el) throw new Error(`Viewport container '${container_id}' not found.`);
@@ -43,19 +42,18 @@ export class Viewport {
         return look_at(this.camera_pos, this.target, vec3(0, 1, 0));
     }
 
-    public get_dimensions() : {width:number, height:number}{
-        this.changed_projection = true;
+    public get_dimensions(): {width: number, height: number} {
         return {
             width: this.container.clientWidth || 400,
-            height:this.container.clientHeight || 300
+            height: this.container.clientHeight || 300
         }
     }
 
-    public get_projection() : mat4 {
-        if(this.changed_projection){
+    public get_projection(): mat4 {
+        if(this.changed_projection) {
             const {width, height} = this.get_dimensions();
             const ratio = width / height;
-            this.projection = perspective(60 * Math.PI / 180, ratio, 0.1,100);
+            this.projection = perspective(60 * Math.PI / 180, ratio, 0.1, 100);
             this.changed_projection = false;
         }   
         return this.projection;
@@ -91,5 +89,9 @@ export class Viewport {
             
             this.update_camera_position();
         }, { passive: false });
+
+        window.addEventListener("resize", () => {
+            this.changed_projection = true;
+        });
     }
 }

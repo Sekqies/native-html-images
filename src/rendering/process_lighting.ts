@@ -14,16 +14,30 @@ export function process_lighting(mesh:Mesh, scene:Scene, inverse_models:mat4[], 
     const specular_k = mesh.specular_coefficient;
     const shininess = 16;
     let index = 0;
-
+        
     for(let i = 0; i < world_coordinates.length; i+=4){
+        if(mesh.transparent){
+            mesh.color_buffer[index++] = mesh.albedo[0];
+            mesh.color_buffer[index++] = mesh.albedo[1];
+            mesh.color_buffer[index++] = mesh.albedo[2];
+            continue;
+        }
         vertex[0] = world_coordinates[i];
         vertex[1] = world_coordinates[i+1];
         vertex[2] = world_coordinates[i+2];
         const start = i/4*3;
-        const nx = mesh.normals[start];
-        const ny = mesh.normals[start+1];
-        const nz = mesh.normals[start+2];
 
+        let nx = mesh.normals[start];
+        let ny = mesh.normals[start+1];
+        let nz = mesh.normals[start+2];
+
+
+        const n_len = Math.sqrt(nx*nx + ny*ny + nz*nz);
+        if (n_len > 0.00001) {
+            nx /= n_len;
+            ny /= n_len;
+            nz /= n_len;
+        }
 
         let color = vec3(0,0,0);
         for(const light of lights){

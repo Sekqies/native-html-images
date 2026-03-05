@@ -101,7 +101,8 @@ export class SceneManager {
                 else if (type === "Orbit") any_node.animations.push(new Orbit(params[0], params[1], params[2], params[3]));
                 
                 this.inspector.inspect(this.selected_node);
-            }
+            },
+            () => {this.load_sample_scene()}
         );
     }
 
@@ -133,6 +134,32 @@ export class SceneManager {
         this.update_stats_ui();
         
         this.select_node(node);
+    }
+
+    public load_sample_scene() {
+        const sun_geo = primitives.create_sphere(1.5, 16, 16);
+        this.add_node(sun_geo, [1.0, 0.8, 0.0]);
+        const sun = this.nodes[this.nodes.length - 1];
+        (sun as any).animations = [new Rotator(1, 0.5)];
+        
+        this.add_point_light(5.0, 50.0, [1.0, 0.9, 0.7], false);
+        
+        const planet1_geo = primitives.create_sphere(0.5, 12, 12);
+        this.add_node(planet1_geo, [0.0, 0.5, 1.0]);
+        const planet1 = this.nodes[this.nodes.length - 1];
+        (planet1 as any).animations = [new Orbit(1.0, 4.0, 0.0, 0.0), new Rotator(1, 2.0)];
+
+        const planet2_geo = primitives.create_3d_ngon(4, 0.8, 0.8);
+        this.add_node(planet2_geo, [1.0, 0.2, 0.2]);
+        const planet2 = this.nodes[this.nodes.length - 1];
+        (planet2 as any).animations = [
+            new Orbit(0.5, 7.0, 0.0, 0.0), 
+            new Rotator(0, 1.0), 
+            new Rotator(2, 1.0), 
+            new Oscillator(1, 2.0, 1.0, 0.0) 
+        ];
+
+        alert("Sample scene loaded! Press 'Play' in the Playback menu to see it move.");
     }
 
     public add_point_light(intensity: number, radius: number, color_arr: number[] = [1.0, 1.0, 1.0], casts_shadow:boolean) {

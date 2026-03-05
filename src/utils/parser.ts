@@ -1,8 +1,7 @@
 import { ArrayType, IndexingType, vec3 } from "../math/types";
 import { Geometry } from "../rendering/types/geometry";
 
-function center_geometry(geo: Geometry): void {
-    const v = geo.vertices;
+function center_geometry(v:ArrayType): void {
     if (v.length === 0) return;
 
     let minX = Infinity, minY = Infinity, minZ = Infinity;
@@ -29,20 +28,20 @@ function center_geometry(geo: Geometry): void {
     }
 }
 
-export function normalize_geometry(geo:Geometry): void {
+export function normalize_geometry(v:ArrayType): void {
     let max = -Infinity;
-    for(let i = 0; i < geo.vertices.length; i+=3){
-        max = Math.max(max,geo.vertices[i])
-        max = Math.max(max,geo.vertices[i+1])
-        max = Math.max(max,geo.vertices[i+2])
+    for(let i = 0; i < v.length; i+=3){
+        max = Math.max(max,Math.abs(v[i]))
+        max = Math.max(max,Math.abs(v[i+1]))
+        max = Math.max(max,Math.abs(v[i+2]))
     }   
     if(max===0){
         max = 1;
     }
-    for(let i = 0; i < geo.vertices.length; i+=3){
-        geo.vertices[i] /= max;
-        geo.vertices[i+1] /= max;
-        geo.vertices[i+2] /= max;
+    for(let i = 0; i < v.length; i+=3){
+        v[i] /= max;
+        v[i+1] /= max;
+        v[i+2] /= max;
     }
 }
 
@@ -138,9 +137,8 @@ export function parse_obj(file:string):Geometry{
                 normals[i + 2] *= len;
             }
         }
-
+    center_geometry(vertices);
+    normalize_geometry(vertices);
     const geo = new Geometry(vertices,indices,normals);
-    center_geometry(geo);
-    normalize_geometry(geo);
     return geo;
 }

@@ -94,6 +94,33 @@ export class Inspector {
 
         this.add_divider(table);
 
+        const tr_del = document.createElement("tr");
+        const td_del = document.createElement("td");
+        td_del.setAttribute("colspan", "3");
+        
+        const btn_del = document.createElement("button");
+        const b_del = document.createElement("b");
+        const font_del = document.createElement("font");
+        font_del.setAttribute("color", "red");
+        font_del.setAttribute("face", "Arial");
+        font_del.innerText = "Delete Mesh";
+        b_del.appendChild(font_del);
+        btn_del.appendChild(b_del);
+        
+        btn_del.onclick = () => {
+            node.scale_vec[0] = 0;
+            node.scale_vec[1] = 0;
+            node.scale_vec[2] = 0;
+            node.update_matrix();
+            this.inspect(node);
+        };
+        
+        td_del.appendChild(btn_del);
+        tr_del.appendChild(td_del);
+        table.appendChild(tr_del);
+
+        this.add_divider(table);
+
         if (node.mesh && node.mesh.albedo && !node.light) {
             this.create_color_row(table, "Color", node.mesh.albedo, node.mesh.albedo);
         }

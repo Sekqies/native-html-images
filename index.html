@@ -5,63 +5,105 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Down with canvas!</title>
     <script type="module" src="/src/main.ts"></script>
+    <script>
+        function toggle_panel(id) {
+            const el = document.getElementById(id);
+            el.hidden = !el.hidden;
+            resize_workspace();
+            window.dispatchEvent(new Event('resize')); 
+        }
+
+        function resize_workspace() {
+            const svg = document.getElementById('container');
+            if (svg) {
+                svg.setAttribute("height", window.innerHeight - 36);
+            }
+        }
+
+        window.addEventListener('resize', resize_workspace);
+        window.addEventListener('load', resize_workspace);
+    </script>
 </head>
-<body bgcolor="grey" text="white">
-<center>
-    <h1><font face="Arial">Down with canvas</font></h1>
-    
-    <table border="1" cellpadding="10" cellspacing="0" width="900" bgcolor="#111111">
-        
+
+<body topmargin="0" leftmargin="0" marginheight="0" marginwidth="0" bgcolor="#000000" text="white">
+
+    <table width="100%" height="35" border="0" cellpadding="0" cellspacing="0" bgcolor="#222222">
         <tr>
-            <td colspan="3" align="right" bgcolor="#222222">
-                <font face="monospace">Triangles: <b id="poly-count">0</b> / 100000</font>
+            <td width="300" align="left" valign="middle">
+                &nbsp;&nbsp;<button onclick="toggle_panel('left-panel')"><b>☰ Create Tools</b></button>
+            </td>
+            <td align="center" valign="middle">
+                <font face="Arial" size="4"><b>Down with canvas</b></font>
+                &nbsp;&nbsp;
+                            <a href="what.html" target="_blank" style="text-decoration: none;">
+                                <font face="Arial" size="2" color="#aaaaaa">[ What is this? ]</font>
+                            </a>
+                            
+                            &nbsp;&nbsp;
+                <font face="Arial" size="2" color="gray">|</font>
+                &nbsp;
+                <font face="Arial" size="2"><b>Wireframe:</b></font> 
+                <input type="checkbox" id="wireframe-mode">
+            </td>
+            <td width="300" align="right" valign="middle">
+                <font face="monospace" size="2" color="#aaaaaa">Triangles: <b id="poly-count"><font color="white">0</font></b> / 100000</font>
+                &nbsp;&nbsp;&nbsp;
+                <button onclick="toggle_panel('right-panel')"><b>☰ Inspector</b></button>&nbsp;&nbsp;
             </td>
         </tr>
+    </table>
 
+    <table width="100%" height="1" border="0" cellpadding="0" cellspacing="0" bgcolor="#333333">
+        <tr><td></td></tr>
+    </table>
+
+    <table width="100%" border="0" cellpadding="0" cellspacing="0">
         <tr valign="top">
             
-            <td nowrap width="25%" bgcolor="#1a1a1a">
-                <h3><font face="Arial">Create</font></h3>
-                <div id="primitive-toolbar"></div>
-                <hr>
-                <div id="primitive-options"></div>
-                <hr>
-            </td>
-
-            <td width="50%" align="center" bgcolor="black">
-                <svg 
-                    width="800px" 
-                    height="600px" 
-                    viewBox="-1 -1 2 2" 
-                    preserveAspectRatio="none"
-                    stroke-width ="0.01"
-                    id="container"
-                    shape-rendering ="optimizeSpeed"
-                >
-                    <path id="render-target" fill="none" stroke="white" stroke-width="0.005" stroke-linejoin="round" />
-                </svg>
-                <br><br>
-                <table border="0" width="100%">
+            <td id="left-panel" width="300" bgcolor="#1a1a1a">
+                <table width="300" border="0" cellpadding="0" cellspacing="0"><tr><td height="1"></td></tr></table>
+                
+                <table width="100%" cellpadding="15" cellspacing="0" border="0">
                     <tr>
-                        <td align="center">
-                            <font face="Arial">Wireframe mode?</font> <input type="checkbox" id="wireframe-mode">
+                        <td>
+                            <h3><font face="Arial">Create</font></h3>
+                            <div id="primitive-toolbar"></div>
+                            <hr color="#333333" size="1">
+                            <div id="primitive-options"></div>
                         </td>
                     </tr>
                 </table>
             </td>
 
-            <td width="25%" bgcolor="#1a1a1a">
-                <h3><font face="Arial">Inspector</font></h3>
-                <div id="inspector-panel">
-                    <font color="gray">Select an object to inspect.</font>
-                </div>
+            <td align="center" valign="top" bgcolor="black">
+                <svg 
+                    width="100%" 
+                    viewBox="-1 -1 2 2" 
+                    preserveAspectRatio="none"
+                    stroke-width="0.01"
+                    id="container"
+                    shape-rendering="optimizeSpeed"
+                >
+                    <path id="render-target" fill="none" stroke="white" stroke-width="0.005" stroke-linejoin="round" />
+                </svg>
+            </td>
+
+            <td id="right-panel" width="300" bgcolor="#1a1a1a">
+                <table width="300" border="0" cellpadding="0" cellspacing="0"><tr><td height="1"></td></tr></table>
+                
+                <table width="100%" cellpadding="15" cellspacing="0" border="0">
+                    <tr>
+                        <td>
+                            <div id="inspector-panel">
+                                <font color="gray" face="Arial">Select an object to inspect.</font>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
             </td>
 
         </tr>
     </table>
 
-    <br><br>
-
-</center>
 </body>
 </html>
